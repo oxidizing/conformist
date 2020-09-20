@@ -102,30 +102,20 @@ let user_schema =
       ]
     user
 
+let input =
+  [
+    ("gender", [ "male" ]);
+    ("email", [ "test@example.com" ]);
+    ("birthday", [ "2020-12-01" ]);
+    ("nr_of_siblings", [ "3" ]);
+    ("comment", [ "hello" ]);
+    ("wants_premium", [ "true" ]);
+  ]
+
 let user =
-  let input =
-    [
-      ("gender", [ "male" ]);
-      ("email", [ "test@example.com" ]);
-      ("birthday", [ "2020-12-01" ]);
-      ("nr_of_siblings", [ "3" ]);
-      ("comment", [ "hello" ]);
-      ("wants_premium", [ "true" ]);
-    ]
-  in
   C.decode Schema.user_schema input
 
 let validation_errors =
-  let input =
-    [
-      ("gender", [ "male" ]);
-      ("email", [ "test@example.com" ]);
-      ("birthday", [ "2020-12-01" ]);
-      ("nr_of_siblings", [ "3" ]);
-      ("comment", [ "hello" ]);
-      ("wants_premium", [ "true" ]);
-    ]
-  in
   C.validate Schema.user_schema input
 ```
 
