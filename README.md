@@ -17,10 +17,6 @@
     Runtime types, schema validation and decoding
     <br />
     <a href="https://oxidizing.github.io/conformist/conformist/Conformist/index.html"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    ·
-    <a href="https://github.com/oxidizing/conformist/issues">Report Bug</a>
   </p>
 </p>
 
@@ -48,16 +44,17 @@ In essence, conformist helps you to keep your runtime types/contracts in sync wi
 opam install conformist
 ```
 
-## Usage
-
-dune:
+In your `dune` file:
 
 ```
 (executable
   (name app)
   (libraries
+   ...
    conformist))
 ```
+
+## Usage
 
 Let's look at an example.
 
@@ -130,45 +127,11 @@ in
   C.validate Schema.user_schema input
 ```
 
-Try to delete/swap lines of that list, to change the constructor or the [user ] type. The code doesn't compile anymore!
-
-[user_schema] showcases the creation of a custom type and optional types.
-
-This is how you can decode a user given some input:
-
-{[
-let input =
-  [
-    ("gender", [ "male" ]);
-    ("email", [ "test@example.com" ]);
-    ("birthday", [ "2020-12-01" ]);
-    ("nr_of_siblings", [ "3" ]);
-    ("comment", [ "hello" ]);
-    ("wants_premium", [ "true" ]);
-  ]
-  in
-  C.decode Schema.user_schema input in
-]}
+Try to delete/swap lines of list of fields, to change the constructor or the user type. The compiler forces you to keep these things in sync.
 
 Decoding doesn't validate the data, it just makes sure that the types are correct and translates strings to the correct static types.
 
-We can validate data based on our validator per field.
-
-{[
-let input =
-  [
-    ("gender", [ "male" ]);
-    ("email", [ "test@example.com" ]);
-    ("birthday", [ "2020-12-01" ]);
-    ("nr_of_siblings", [ "3" ]);
-    ("comment", [ "hello" ]);
-    ("wants_premium", [ "true" ]);
-  ]
-  in
-  C.validate Schema.user_schema input in
-]}
-
-Note that if decoding of a field fails, validation fails as well since before a field is validated it gets decoded.
+Note that if decoding of a field fails, validation fails as well. Before a field is validated, it gets decoded.
 
 ## Documentation
 
