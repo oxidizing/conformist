@@ -57,24 +57,25 @@ let user_schema =
     user
 ]}
 
-Try to delete/swap lines of that list, to change the constructor or the [user ] type. The code doesn't compile anymore!
+Try to delete/swap lines of that list, to change the constructor or the [user] type. The code doesn't compile anymore!
 
 [user_schema] showcases the creation of a custom type and optional types.
 
 This is how you can decode a user given some input:
 
 {[
-let input =
-  [
-    ("gender", [ "male" ]);
-    ("email", [ "test@example.com" ]);
-    ("birthday", [ "2020-12-01" ]);
-    ("nr_of_siblings", [ "3" ]);
-    ("comment", [ "hello" ]);
-    ("wants_premium", [ "true" ]);
-  ]
+let user =
+  let input =
+    [
+      ("gender", [ "male" ]);
+      ("email", [ "test@example.com" ]);
+      ("birthday", [ "2020-12-01" ]);
+      ("nr_of_siblings", [ "3" ]);
+      ("comment", [ "hello" ]);
+      ("wants_premium", [ "true" ]);
+    ]
   in
-C.decode Schema.user_schema input
+  C.decode Schema.user_schema input
 ]}
 
 Decoding doesn't validate the data, it just makes sure that the types are correct and translates strings to the correct static types.
@@ -82,17 +83,18 @@ Decoding doesn't validate the data, it just makes sure that the types are correc
 We can validate data based on our validator per field.
 
 {[
-let input =
-  [
-    ("gender", [ "male" ]);
-    ("email", [ "test@example.com" ]);
-    ("birthday", [ "2020-12-01" ]);
-    ("nr_of_siblings", [ "3" ]);
-    ("comment", [ "hello" ]);
-    ("wants_premium", [ "true" ]);
-  ]
+let validation_errors =
+  let input =
+    [
+      ("gender", [ "male" ]);
+      ("email", [ "test@example.com" ]);
+      ("birthday", [ "2020-12-01" ]);
+      ("nr_of_siblings", [ "3" ]);
+      ("comment", [ "hello" ]);
+      ("wants_premium", [ "true" ]);
+    ]
   in
-C.validate Schema.user_schema input
+  C.validate Schema.user_schema input
 ]}
 
 Note that if decoding of a field fails, validation fails as well since before a field is validated it gets decoded.
