@@ -14,7 +14,7 @@
   <h3 align="center">Conformist</h3>
 
   <p align="center">
-    Runtime types, schema validation and decoding
+    Schema definition and validation with support for decoding to bridge the gap between runtime types and static types.
     <br />
     <a href="https://oxidizing.github.io/conformist/conformist/Conformist/index.html"><strong>Explore the docs »</strong></a>
   </p>
