@@ -36,8 +36,8 @@ jobs:
       - name: Install dependencies
         if: steps.cache-opam.outputs.cache-hit != 'true'
         run: |
-          opam install -y alcotest ppx_deriving
-          opam install . --deps-only --with-doc --with-test --locked --unlock-base
+          opam pin add -yn conformist .
+          opam install -y conformist --deps-only --with-doc --with-test --locked --unlock-base
       - name: Recover from an Opam broken state
         if: steps.cache-opam.outputs.cache-hit == 'true'
         run: opam upgrade --fixup
