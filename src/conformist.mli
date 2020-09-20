@@ -74,7 +74,7 @@ let input =
     ("wants_premium", [ "true" ]);
   ]
   in
-  C.decode Schema.user_schema input in
+C.decode Schema.user_schema input
 ]}
 
 Decoding doesn't validate the data, it just makes sure that the types are correct and translates strings to the correct static types.
@@ -92,7 +92,7 @@ let input =
     ("wants_premium", [ "true" ]);
   ]
   in
-  C.validate Schema.user_schema input in
+C.validate Schema.user_schema input
 ]}
 
 Note that if decoding of a field fails, validation fails as well since before a field is validated it gets decoded.

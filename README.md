@@ -36,63 +36,19 @@
 
 ## About
 
+Conformist allows you to define schemas to decode, validate and sanitize input data declaratively. It comes with runtime types for primitive OCaml types such as `int`, `string`, `bool` and `float` but also `Ptime.date`, optional and custom types. Re-use business rules in validators and run it on the client side with [js_of_ocaml](https://github.com/ocsigen/js_of_ocaml/). Arbitrary meta data can be stored in schemas which is useful to build functionality on top of conformist.
+
+Typical use cases are enforcing invariants of models or user input sanitization.
+
+In essence, conformist helps you to keep your runtime types/contracts in sync with your static types.
+
 ## Installation
 
-Follow the steps to get started with a minimal running web server.
-
-### Prerequisites
-
-* Basic understanding of OCaml
-* Installation of [opam](https://opam.ocaml.org/doc/Install.html)
-
-To initialize opam:
 ```sh
-opam init
-```
-
-To install dune (the build system):
-```sh
-opam install dune
-```
-
-### Installation
-
-To create the switch with the proper compiler version:
-```sh
-opam switch create 4.08.1
-opam switch 4.08.1
-```
-
-To install the database driver dependencies for MariaDB and PostgreSQL:
-```sh
-(Ubuntu)
-sudo apt-get install -y libmariadbclient-dev libpq-dev
-
-(Arch)
-pacman -S mariadb-libs postgresql-libs
-```
-
-To install `inotifywait` to watch your build:
-```sh
-(Ubuntu)
-sudo apt-get install -y inotify-tools
-
-(Arch)
-pacman -S inotify-tools
-```
-
-To install all dependencies and Sihl:
-```sh
-opam install .
-opam install caqti-driver-mariadb caqti-driver-postgresql
-opam install sihl
+opam install conformist
 ```
 
 ## Usage
-
-Let's a simple Sihl app, that is a simple web app with a HTTP route.
-
-We are using [https://github.com/ocaml/dune](dune) to build the project. Create a `dune` file that specifies an executable depending on Sihl.
 
 dune:
 
@@ -100,45 +56,119 @@ dune:
 (executable
   (name app)
   (libraries
-   sihl
-  )
-)
+   conformist))
 ```
 
+Let's look at an example.
+
+```ocaml
+module C = Conformist
+
+type gender = Male | Female | Other
+
+type user = {
+  gender : gender;
+  email : string;
+  birthday : int * int * int;
+  nr_of_siblings : int;
+  comment : string option;
+  wants_premium : bool;
+}
+
+let user gender email birthday nr_of_siblings comment wants_premium
+    =
+  {
+    gender;
+    email;
+    birthday;
+    nr_of_siblings;
+    comment;
+    wants_premium;
+  }
+
+let gender_decoder = function
+  | "male" -> Ok Male
+  | "female" -> Ok Female
+  | "other" -> Ok Other
+  | _ -> Error "Unknown gender provided"
+
+let user_schema =
+  C.make
+    C.Field.
+      [
+        C.custom "gender" gender_decoder ~meta:() ();
+        C.string "email" ();
+        C.date "birthday" ();
+        C.int "nr_of_siblings" ();
+        C.optional (C.string "comment" ());
+        C.bool "wants_premium" ();
+      ]
+    user
+
+let user =
+  [
+    ("gender", [ "male" ]);
+    ("email", [ "test@example.com" ]);
+    ("birthday", [ "2020-12-01" ]);
+    ("nr_of_siblings", [ "3" ]);
+    ("comment", [ "hello" ]);
+    ("wants_premium", [ "true" ]);
+  ]
+in
+  C.decode Schema.user_schema input
+
+let validation_erorrs =
+  [
+    ("gender", [ "male" ]);
+    ("email", [ "test@example.com" ]);
+    ("birthday", [ "2020-12-01" ]);
+    ("nr_of_siblings", [ "3" ]);
+    ("comment", [ "hello" ]);
+    ("wants_premium", [ "true" ]);
+  ]
+in
+  C.validate Schema.user_schema input
 ```
-.
-├── service
-│   ├── dune
-│   ├── service.ml
-├── app
-│   ├── dune
-│   ├── app.ml
-├── components
-│   ├── pizza-delivery
-│   │   ├── model.ml
-│   │   ├── service.ml
-│   │   ├── repo.ml
-│   ├── pizza-order-taking
-│   │   ├── model.ml
-│   │   ├── service.ml
-│   │   ├── repo.ml
-│   │   ├── cmd.ml
-├── web
-│   ├── routes.ml
-│   ├── middlewares.ml
-├── cli
-│   ├── cmd.ml
-```
 
-There is a strong emphasis on the separation of business logic from everything else. In this example, the domain layer is split up into two parts `pizza-delivery` and `pizza-order-taking`. Note that all the business rules live in that layer.
+Try to delete/swap lines of that list, to change the constructor or the [user ] type. The code doesn't compile anymore!
 
-A set of services, models and repos on its own is not that useful. In order to make it useful, we need to expose it to users. A typical web app does that through HTTP and a few CLI commands, which are primary used for development.
+[user_schema] showcases the creation of a custom type and optional types.
 
-Everything regarding HTTP, routing, GraphQL, REST, JSON, middlewares lives in `web`. `web` is allowed to use any service.
+This is how you can decode a user given some input:
 
-The folder `app` contains `app.ml` which describes a Sihl app.
+{[
+let input =
+  [
+    ("gender", [ "male" ]);
+    ("email", [ "test@example.com" ]);
+    ("birthday", [ "2020-12-01" ]);
+    ("nr_of_siblings", [ "3" ]);
+    ("comment", [ "hello" ]);
+    ("wants_premium", [ "true" ]);
+  ]
+  in
+  C.decode Schema.user_schema input in
+]}
 
-In the folder `service` contains the service configuration `service.ml`. This is the static setup of all services that are usable throughout the project.
+Decoding doesn't validate the data, it just makes sure that the types are correct and translates strings to the correct static types.
+
+We can validate data based on our validator per field.
+
+{[
+let input =
+  [
+    ("gender", [ "male" ]);
+    ("email", [ "test@example.com" ]);
+    ("birthday", [ "2020-12-01" ]);
+    ("nr_of_siblings", [ "3" ]);
+    ("comment", [ "hello" ]);
+    ("wants_premium", [ "true" ]);
+  ]
+  in
+  C.validate Schema.user_schema input in
+]}
+
+Note that if decoding of a field fails, validation fails as well since before a field is validated it gets decoded.
 
 ## Documentation
 
