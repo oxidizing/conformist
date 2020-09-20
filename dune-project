@@ -25,4 +25,5 @@ Conformist allows you to define schemas to decode, validate and sanitize input d
 
   ;; Test
   (alcotest (and (>= 1.2.3) :with-test))
-  (ppx_deriving (and (>= 4.5) :with-test))))
+  (ppx_deriving (and (>= 4.5) :with-test))
+  (ppx_fields_conv (and (>= v0.14.1) :with-test))))
