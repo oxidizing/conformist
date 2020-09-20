@@ -13,9 +13,9 @@ jobs:
           - macos-latest
           - ubuntu-latest
         ocaml-version:
-          - 4.11.1
-          - 4.10.1
-          - 4.09.1
+          # - 4.11.1
+          # - 4.10.1
+          # - 4.09.1
           - 4.08.1
     steps:
       - name: Checkout code
@@ -36,8 +36,7 @@ jobs:
       - name: Install dependencies
         if: steps.cache-opam.outputs.cache-hit != 'true'
         run: |
-          opam pin add -yn conformist .
-          opam install -y conformist --deps-only --with-doc --with-test --locked --unlock-base
+          opam install -y . --deps-only --with-doc --with-test --locked --unlock-base
       - name: Recover from an Opam broken state
         if: steps.cache-opam.outputs.cache-hit == 'true'
         run: opam upgrade --fixup
