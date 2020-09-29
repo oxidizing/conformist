@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0] - 2020-09-29
+### Added
+- `Conformist.Field.type_` can be used to retrieve a string representation of the type
+
+### Fixed
+- Move mandatory field name parameter to the end of create functions in order to get rid of the trailing () argument
+
 ## [0.0.2] - 2020-09-29
 ### Fixed
 - Move `fold_left` to top level module and accept `Conformist.t` as input
