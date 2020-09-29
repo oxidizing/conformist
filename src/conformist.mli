@@ -130,6 +130,9 @@ module Field : sig
 
   val optional : 'a any_field -> bool
   (** [optional field] turns a [field] into an optional field. This means that input that doesn't contain a value for the field will yield in a valid field. *)
+
+  val type_ : 'a any_field -> string
+  (** [name type_] returns a string representation of the type of [field]. *)
 end
 
 type 'a decoder = string -> ('a, string) result
@@ -139,57 +142,50 @@ type 'a validator = 'a -> string option
 (** A ['a validator] takes something of type ['a] and returns an error string if validation fails, [None] if everything is ok *)
 
 val custom :
-  string ->
   'a decoder ->
+  ?type_:string ->
   ?meta:'b ->
   ?validator:'a validator ->
-  unit ->
+  string ->
   ('b, 'a) Field.t
-(** Use [custom field_name decoder ?meta ?validator ()] to create a field with a custom type that is not supported out-of-the box. Provide a custom [decoder] with a descriptive error message so conformist knows how to turn a string into your custom value. *)
+(** Use [custom decoder ?type_ ?meta ?validator field_name] to create a field with a custom type that is not supported out-of-the box. Provide a custom [decoder] with a descriptive error message so conformist knows how to turn a string into your custom value. A string representation of the static [type_] can also be provided, by default the [field_name] is taken. *)
 
 val optional : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
 (** Use [optional ?meta field] to turn any field into an optional value. Note that the field must still be contained in the final input (when decoding or validating), but it can be an empty list or an empty string. If the data is not provided in the input, no validation logic is executed. *)
 
-val bool : string -> ?meta:'a -> ?msg:string -> unit -> ('a, bool) Field.t
-(** [bool name ?meta ?msg ()] creates a field with [name] some [meta] data and a custom decode error message [msg] that decodes to a boolean. *)
+val bool : ?meta:'a -> ?msg:string -> string -> ('a, bool) Field.t
+(** [bool ?meta ?msg field_name] creates a field with [field_name] some [meta] data and a custom decode error message [msg] that decodes to a boolean. *)
 
 val float :
-  string ->
   ?meta:'a ->
   ?msg:string ->
   ?validator:float validator ->
-  unit ->
+  string ->
   ('a, float) Field.t
-(** [float name ?meta ?msg ?validator ()] creates a field that decodes to a float with [name] some [meta] data, a custom decode error message [msg] and a [validator]. *)
+(** [float ?meta ?msg ?validator field_name] creates a field that decodes to a float with [field_name] some [meta] data, a custom decode error message [msg] and a [validator]. *)
 
 val int :
-  string ->
   ?meta:'a ->
   ?msg:string ->
   ?validator:int validator ->
-  unit ->
+  string ->
   ('a, int) Field.t
-(** [int name ?meta ?msg ?validator ()] creates a field that decodes to a int with [name] some [meta] data, a custom decode error message [msg] and a [validator]. *)
+(** [int ?meta ?msg ?validator field_name] creates a field that decodes to a int with [field_name] some [meta] data, a custom decode error message [msg] and a [validator]. *)
 
 val string :
-  string ->
-  ?meta:'a ->
-  ?validator:string validator ->
-  unit ->
-  ('a, string) Field.t
-(** [string name ?meta ?validator ()] creates a field that decodes to a string with [name] some [meta] data and a [validator]. Note that this field does not need to be decoded, but it can still be validated. *)
+  ?meta:'a -> ?validator:string validator -> string -> ('a, string) Field.t
+(** [string ?meta ?validator field_name] creates a field that decodes to a string with [field_name] some [meta] data and a [validator]. Note that this field does not need to be decoded, but it can still be validated. *)
 
 type date = int * int * int
 (** Valid date example: 2020-11-25, this type is compatible with Ptime.date *)
 
 val date :
-  string ->
   ?meta:'a ->
   ?msg:string ->
   ?validator:(int * int * int) validator ->
-  unit ->
+  string ->
   ('a, date) Field.t
-(** [string name ?meta ?validator ()] creates a field that decodes to a date with [name] some [meta] data and a [validator]. *)
+(** [string ?meta ?validator field_name] creates a field that decodes to a date with [field_name] some [meta] data and a [validator]. *)
 
 (** {1 Schema}
 

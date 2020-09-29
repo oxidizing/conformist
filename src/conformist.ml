@@ -11,6 +11,7 @@ module Field = struct
     name : string;
     meta : 'meta option;
     decoder : 'a decoder;
+    type_ : string;
     validator : 'a validator;
     optional : bool;
   }
@@ -34,12 +35,14 @@ module Field = struct
 
   let optional (AnyField field) = field.optional
 
-  let make name meta decoder validator optional =
-    { name; meta; decoder; validator; optional }
+  let type_ (AnyField field) = field.type_
 
-  let make_custom name decoder ?meta ?(validator = always_valid) () =
-    let decoder string = decoder string in
-    make name meta decoder validator false
+  let make name meta decoder type_ validator optional =
+    { name; meta; decoder; type_; validator; optional }
+
+  let make_custom decoder ?type_ ?meta ?(validator = always_valid) name =
+    let type_ = Option.value type_ ~default:name in
+    make name meta decoder type_ validator false
 
   let make_optional ?meta field =
     let decoder string =
@@ -53,30 +56,30 @@ module Field = struct
     let validator a =
       match a with Some a -> field.validator a | None -> None
     in
-    make field.name meta decoder validator true
+    make field.name meta decoder field.type_ validator true
 
-  let make_bool name ?meta ?(msg = "Invalid value provided") () =
+  let make_bool ?meta ?(msg = "Invalid value provided") name =
     let decoder string = try Ok (bool_of_string string) with _ -> Error msg in
-    make name meta decoder always_valid false
+    make name meta decoder "bool" always_valid false
 
-  let make_float name ?meta ?(msg = "Invalid number provided")
-      ?(validator = always_valid) () =
+  let make_float ?meta ?(msg = "Invalid number provided")
+      ?(validator = always_valid) name =
     let decoder string =
       try Ok (float_of_string string) with _ -> Error msg
     in
-    make name meta decoder validator false
+    make name meta decoder "float" validator false
 
-  let make_int name ?meta ?(msg = "Invalid number provided")
-      ?(validator = always_valid) () =
+  let make_int ?meta ?(msg = "Invalid number provided")
+      ?(validator = always_valid) name =
     let decoder string = try Ok (int_of_string string) with _ -> Error msg in
-    make name meta decoder validator false
+    make name meta decoder "int" validator false
 
-  let make_string name ?meta ?(validator = always_valid) () =
+  let make_string ?meta ?(validator = always_valid) name =
     let decoder string = Ok string in
-    make name meta decoder validator false
+    make name meta decoder "string" validator false
 
-  let make_date name ?meta ?(msg = "Invalid date provided")
-      ?(validator = always_valid) () =
+  let make_date ?meta ?(msg = "Invalid date provided")
+      ?(validator = always_valid) name =
     let decoder string =
       match String.split_on_char '-' string with
       | [ y; m; d ] -> (
@@ -87,7 +90,7 @@ module Field = struct
           | _ -> Error msg )
       | _ -> Error msg
     in
-    make name meta decoder validator false
+    make name meta decoder "date" validator false
 end
 
 let custom = Field.make_custom

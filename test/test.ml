@@ -22,7 +22,7 @@ let testable_schema_optional =
 let decode_optional () =
   let make name address = { name; address } in
   let schema =
-    C.make [ C.string "name" (); C.optional (C.string "address" ()) ] make
+    C.make [ C.string "name"; C.optional (C.string "address") ] make
   in
   Alcotest.(
     check
@@ -57,7 +57,7 @@ let testable_schema_multi = Alcotest.testable pp_schema_multi equal_schema_multi
 
 let decode_multi () =
   let make name age = { name; age } in
-  let schema = C.make [ C.string "name" (); C.int "age" () ] make in
+  let schema = C.make [ C.string "name"; C.int "age" ] make in
   let expected = Error "Failed to decode field 'name': No value provided" in
   let actual = C.decode schema [] in
   Alcotest.(
