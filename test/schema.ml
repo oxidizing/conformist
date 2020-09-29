@@ -42,13 +42,13 @@ let user_schema =
   C.make
     C.Field.
       [
-        C.custom gender_decoder gender_encoder "gender" ~meta:();
+        C.custom gender_decoder gender_encoder ~default:Female "gender" ~meta:();
         C.string "name";
         C.string "email";
         C.date "birthday";
         C.string "country";
-        C.int "nr_of_siblings";
+        C.int ~default:0 "nr_of_siblings";
         C.optional (C.string "comment");
-        C.bool "wants_premium";
+        C.bool ~default:false "wants_premium";
       ]
     user

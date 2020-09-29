@@ -152,9 +152,14 @@ let validate schema input =
         | Some msg -> List.cons (name, msg) errors
         | None -> errors )
     | _ -> List.cons (name, "Multiple values provided") errors
-    | exception Not_found ->
-        if Field.optional field then errors
-        else List.cons (name, "No value provided") errors
+    | exception Not_found -> (
+        match (Field.optional field, Field.encode_default field) with
+        | _, Some default -> (
+            match Field.validate field default with
+            | Some msg -> List.cons (name, msg) errors
+            | None -> errors )
+        | true, None -> errors
+        | false, None -> List.cons (name, "No value provided") errors )
   in
   fold_left ~f ~init:[] schema |> List.rev
 
@@ -181,24 +186,44 @@ let rec decode :
                 (Printf.sprintf "Failed to decode value '%s' of field '%s': %s"
                    field.name value_string msg) )
       | [] -> (
-          match field.decoder "" with
-          | Ok value -> (
+          match field.default with
+          | Some value -> (
               match ctor value with
               | ctor -> decode { fields; ctor } fields_assoc
               | exception _ ->
                   Error
-                    (Printf.sprintf "Failed to decode value '%s' of field '%s'"
-                       "" field.name) )
-          | Error msg ->
-              Error
-                (Printf.sprintf "Failed to decode value '%s' of field '%s': %s"
-                   field.name "" msg) )
+                    (Printf.sprintf "Failed to construct field '%s'" field.name)
+              )
+          | None -> (
+              match field.decoder "" with
+              | Ok value -> (
+                  match ctor value with
+                  | ctor -> decode { fields; ctor } fields_assoc
+                  | exception _ ->
+                      Error
+                        (Printf.sprintf
+                           "Failed to decode value '%s' of field '%s'" ""
+                           field.name) )
+              | Error msg ->
+                  Error
+                    (Printf.sprintf
+                       "Failed to decode value '%s' of field '%s': %s"
+                       field.name "" msg) ) )
       | _ ->
           Error
             (Printf.sprintf
                "Failed to decode field '%s': Multiple values provided"
                field.name)
-      | exception Not_found ->
-          Error
-            (Printf.sprintf "Failed to decode field '%s': No value provided"
-               field.name) )
+      | exception Not_found -> (
+          match field.default with
+          | Some value -> (
+              match ctor value with
+              | ctor -> decode { fields; ctor } fields_assoc
+              | exception _ ->
+                  Error
+                    (Printf.sprintf "Failed to construct field '%s'" field.name)
+              )
+          | None ->
+              Error
+                (Printf.sprintf "Failed to decode field '%s': No value provided"
+                   field.name) ) )

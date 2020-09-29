@@ -49,6 +49,26 @@ let decode_optional () =
   Alcotest.(
     check (result testable_schema_optional string) "decodes" expected actual)
 
+let decode_default () =
+  let make name address = { name; address } in
+  let schema =
+    C.make
+      [ C.string ~default:"Walter" "name"; C.optional (C.string "address") ]
+      make
+  in
+  Alcotest.(
+    check
+      (result testable_schema_optional string)
+      "decodes"
+      (Ok (make "Walter" None))
+      (C.decode schema [ ("address", [ "" ]) ]));
+  Alcotest.(
+    check
+      (result testable_schema_optional string)
+      "decodes"
+      (Ok (make "Jesse" None))
+      (C.decode schema [ ("name", [ "Jesse" ]); ("address", [ "" ]) ]))
+
 (* Testing multiple fields *)
 
 type schema_multi = { name : string; age : int } [@@deriving show, eq]
@@ -116,30 +136,43 @@ let decode_complete_and_valid_input () =
 let validate_incomplete_input () =
   let actual = C.validate Schema.user_schema [] in
   Alcotest.(
-    check testable_validation_error "has one error"
+    check testable_validation_error "has error"
       [
-        ("gender", "No value provided");
         ("name", "No value provided");
         ("email", "No value provided");
         ("birthday", "No value provided");
         ("country", "No value provided");
-        ("nr_of_siblings", "No value provided");
-        ("wants_premium", "No value provided");
       ])
     actual;
-  let actual = C.validate Schema.user_schema [ ("gender", [ "foo" ]) ] in
+  let actual =
+    C.validate Schema.user_schema
+      [ ("gender", [ "foo" ]); ("birthday", [ "2000-10-23" ]) ]
+  in
   Alcotest.(
-    check testable_validation_error "has one error"
+    check testable_validation_error "has error"
       [
         ("gender", "Unknown gender provided");
         ("name", "No value provided");
         ("email", "No value provided");
-        ("birthday", "No value provided");
         ("country", "No value provided");
-        ("nr_of_siblings", "No value provided");
-        ("wants_premium", "No value provided");
       ]
       actual)
+
+let validate_complete_input () =
+  let input =
+    [
+      ("gender", [ "male" ]);
+      ("name", [ "walter" ]);
+      ("birthday", [ "2020-12-01" ]);
+      ("email", [ "test@example.com" ]);
+      ("country", [ "Switzerland" ]);
+      ("nr_of_siblings", [ "3" ]);
+      ("comment", [ "hello" ]);
+      ("wants_premium", [ "true" ]);
+    ]
+  in
+  let actual = C.validate Schema.user_schema input in
+  Alcotest.(check testable_validation_error "can validate" [] actual)
 
 let () =
   let open Alcotest in
@@ -148,10 +181,14 @@ let () =
       ( "decode data",
         [
           test_case "optional" `Quick decode_optional;
+          test_case "default" `Quick decode_default;
           test_case "multi" `Quick decode_multi;
           test_case "invalid input" `Quick decode_complete_and_invalid_input;
           test_case "valid input" `Quick decode_complete_and_valid_input;
         ] );
       ( "validate date",
-        [ test_case "incomplete input" `Quick validate_incomplete_input ] );
+        [
+          test_case "incomplete input" `Quick validate_incomplete_input;
+          test_case "complete input" `Quick validate_complete_input;
+        ] );
     ]

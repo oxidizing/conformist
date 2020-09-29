@@ -35,11 +35,18 @@ let user gender email birthday nr_of_siblings comment wants_premium
 Now we can create a schema.
 
 {[
+
 let gender_decoder = function
   | "male" -> Ok Male
   | "female" -> Ok Female
   | "other" -> Ok Other
   | _ -> Error "Unknown gender provided"
+
+let gender_encoder = function
+  | Male -> "male"
+  | Female -> "female"
+  | Other -> "other"
+
 
 module C = Conformist
 
@@ -47,12 +54,12 @@ let user_schema =
   C.make
     C.Field.
       [
-        C.custom "gender" gender_decoder ~meta:() ();
-        C.string "email" ();
-        C.date "birthday" ();
-        C.int "nr_of_siblings" ();
-        C.optional (C.string "comment" ());
-        C.bool "wants_premium" ();
+        C.custom gender_decoder gender_encoder "gender" ~meta:();
+        C.string "email";
+        C.date "birthday";
+        C.int ~default:0 "nr_of_siblings";
+        C.optional (C.string "comment");
+        C.bool "wants_premium");
       ]
     user
 ]}
