@@ -132,60 +132,97 @@ module Field : sig
   (** [optional field] turns a [field] into an optional field. This means that input that doesn't contain a value for the field will yield in a valid field. *)
 
   val type_ : 'a any_field -> string
-  (** [name type_] returns a string representation of the type of [field]. *)
+  (** [type_ field] returns a string representation of the type of [field]. *)
+
+  val encode_default : 'a any_field -> string option
+  (** [default_string field ] tries to encode the default value if present and to return it as string *)
 end
 
 type 'a decoder = string -> ('a, string) result
 (** A ['a decoder] tries to turn a string into a value of type ['a]. It returns a descriptive errors message upon failure. *)
+
+type 'a encoder = 'a -> string
+(** A ['a encoder] encodes a value of type ['a] into a string. *)
 
 type 'a validator = 'a -> string option
 (** A ['a validator] takes something of type ['a] and returns an error string if validation fails, [None] if everything is ok *)
 
 val custom :
   'a decoder ->
+  'a encoder ->
+  ?default:'a ->
   ?type_:string ->
   ?meta:'b ->
   ?validator:'a validator ->
   string ->
   ('b, 'a) Field.t
-(** Use [custom decoder ?type_ ?meta ?validator field_name] to create a field with a custom type that is not supported out-of-the box. Provide a custom [decoder] with a descriptive error message so conformist knows how to turn a string into your custom value. A string representation of the static [type_] can also be provided, by default the [field_name] is taken. *)
+(** Use [custom decoder encoder ?default ?type_ ?meta ?validator field_name] to create a field with a custom type that is not supported out-of-the box. Provide a custom [decoder] with a descriptive error message so conformist knows how to turn a string into your custom value.
+
+A string representation of the static [type_] can also be provided, by default the [field_name] is taken.
+
+A [default] value can be provided.
+*)
 
 val optional : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
 (** Use [optional ?meta field] to turn any field into an optional value. Note that the field must still be contained in the final input (when decoding or validating), but it can be an empty list or an empty string. If the data is not provided in the input, no validation logic is executed. *)
 
-val bool : ?meta:'a -> ?msg:string -> string -> ('a, bool) Field.t
-(** [bool ?meta ?msg field_name] creates a field with [field_name] some [meta] data and a custom decode error message [msg] that decodes to a boolean. *)
+val bool :
+  ?default:bool -> ?meta:'a -> ?msg:string -> string -> ('a, bool) Field.t
+(** [bool ?default ?meta ?msg field_name] creates a field with [field_name] some [meta] data and a custom decode error message [msg] that decodes to a boolean.
+
+A [default] value can be provided.
+*)
 
 val float :
+  ?default:float ->
   ?meta:'a ->
   ?msg:string ->
   ?validator:float validator ->
   string ->
   ('a, float) Field.t
-(** [float ?meta ?msg ?validator field_name] creates a field that decodes to a float with [field_name] some [meta] data, a custom decode error message [msg] and a [validator]. *)
+(** [float ?meta ?msg ?validator field_name] creates a field that decodes to a float with [field_name] some [meta] data, a custom decode error message [msg] and a [validator].
+
+A [default] value can be provided.
+*)
 
 val int :
+  ?default:int ->
   ?meta:'a ->
   ?msg:string ->
   ?validator:int validator ->
   string ->
   ('a, int) Field.t
-(** [int ?meta ?msg ?validator field_name] creates a field that decodes to a int with [field_name] some [meta] data, a custom decode error message [msg] and a [validator]. *)
+(** [int ?meta ?msg ?validator field_name] creates a field that decodes to a int with [field_name] some [meta] data, a custom decode error message [msg] and a [validator].
+
+A [default] value can be provided.
+*)
 
 val string :
-  ?meta:'a -> ?validator:string validator -> string -> ('a, string) Field.t
-(** [string ?meta ?validator field_name] creates a field that decodes to a string with [field_name] some [meta] data and a [validator]. Note that this field does not need to be decoded, but it can still be validated. *)
+  ?default:string ->
+  ?meta:'a ->
+  ?validator:string validator ->
+  string ->
+  ('a, string) Field.t
+(** [string ?meta ?validator field_name] creates a field that decodes to a string with [field_name] some [meta] data and a [validator]. Note that this field does not need to be decoded, but it can still be validated.
+
+A [default] value can be provided.
+*)
 
 type date = int * int * int
 (** Valid date example: 2020-11-25, this type is compatible with Ptime.date *)
 
 val date :
+  ?default:date ->
   ?meta:'a ->
   ?msg:string ->
   ?validator:(int * int * int) validator ->
   string ->
   ('a, date) Field.t
-(** [string ?meta ?validator field_name] creates a field that decodes to a date with [field_name] some [meta] data and a [validator]. *)
+(** [string ?meta ?validator field_name] creates a field that decodes to a date with [field_name] some [meta] data and a [validator].
+
+
+A [default] value can be provided.
+*)
 
 (** {1 Schema}
 

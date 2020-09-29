@@ -33,11 +33,16 @@ let gender_decoder = function
   | "other" -> Ok Other
   | _ -> Error "Unknown gender provided"
 
+let gender_encoder = function
+  | Male -> "male"
+  | Female -> "female"
+  | Other -> "other"
+
 let user_schema =
   C.make
     C.Field.
       [
-        C.custom gender_decoder "gender" ~meta:();
+        C.custom gender_decoder gender_encoder "gender" ~meta:();
         C.string "name";
         C.string "email";
         C.date "birthday";

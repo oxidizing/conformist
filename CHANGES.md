@@ -3,6 +3,8 @@
 ## [0.1.0] - 2020-09-29
 ### Added
 - `Conformist.Field.type_` can be used to retrieve a string representation of the type
+- Support for custom `encoders` for custom types
+- Support for encoding default values if present, this can be used to print schemas
 
 ### Fixed
 - Move mandatory field name parameter to the end of create functions in order to get rid of the trailing () argument
