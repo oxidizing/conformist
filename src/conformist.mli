@@ -130,13 +130,6 @@ module Field : sig
 
   val optional : 'a any_field -> bool
   (** [optional field] turns a [field] into an optional field. This means that input that doesn't contain a value for the field will yield in a valid field. *)
-
-  val fold_left :
-    f:('res -> 'meta any_field -> 'res) ->
-    init:'res ->
-    ('meta, 'args, 'ty) list ->
-    'res
-  (** [fold_left ~f ~init fields] can be used to traverse a lit of fields. Use the functions [meta], [nae], [validate] and [optional] in f. *)
 end
 
 type 'a decoder = string -> ('a, string) result
@@ -211,6 +204,13 @@ val empty : ('a, unit, unit) t
 
 val make : ('a, 'b, 'c) Field.list -> 'b -> ('a, 'b, 'c) t
 (** [make fields constructor] create a schema. *)
+
+val fold_left :
+  f:('res -> 'meta Field.any_field -> 'res) ->
+  init:'res ->
+  ('meta, 'args, 'ty) t ->
+  'res
+(** [fold_left ~f ~init schema] can be used to traverse the list of fields of [schema]. Use the functions [meta], [name], [validate] and [optional] in f. *)
 
 type validation_error = (string * string) list
 (** An empty [validation_error] means that the schema is valid. *)

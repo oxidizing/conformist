@@ -88,17 +88,6 @@ module Field = struct
       | _ -> Error msg
     in
     make name meta decoder validator false
-
-  let rec fold_left :
-      type ty args.
-      f:('res -> 'meta any_field -> 'res) ->
-      init:'res ->
-      ('meta, args, ty) list ->
-      'res =
-   fun ~f ~init fields ->
-    match fields with
-    | [] -> init
-    | field :: fields -> fold_left ~f ~init:(f init (AnyField field)) fields
 end
 
 let custom = Field.make_custom
@@ -124,11 +113,24 @@ let empty = { fields = Field.[]; ctor = () }
 
 let make fields ctor = { fields; ctor }
 
+let rec fold_left' :
+    type ty args.
+    f:('res -> 'meta Field.any_field -> 'res) ->
+    init:'res ->
+    ('meta, args, ty) Field.list ->
+    'res =
+ fun ~f ~init fields ->
+  match fields with
+  | [] -> init
+  | field :: fields -> fold_left' ~f ~init:(f init (AnyField field)) fields
+
+let fold_left ~f ~init schema = fold_left' ~f ~init schema.fields
+
 type validation_error = (string * string) list
 
 type input = (string * string list) list
 
-let validate { fields; _ } input =
+let validate schema input =
   let f errors field =
     let name = Field.name field in
     match List.assoc name input with
@@ -141,7 +143,7 @@ let validate { fields; _ } input =
         if Field.optional field then errors
         else List.cons (name, "No value provided") errors
   in
-  Field.fold_left ~f ~init:[] fields |> List.rev
+  fold_left ~f ~init:[] schema |> List.rev
 
 let rec decode :
     type meta ctor ty.
