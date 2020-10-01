@@ -47,7 +47,6 @@ let gender_encoder = function
   | Female -> "female"
   | Other -> "other"
 
-
 module C = Conformist
 
 let user_schema =

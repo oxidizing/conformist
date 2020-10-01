@@ -1,11 +1,3 @@
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![Release date][release-date]][release-date]
-
-
 <br />
 <p align="center">
   <!-- <a href="https://github.com/oxidizing/conformist"> -->
@@ -89,6 +81,11 @@ let gender_decoder = function
   | "other" -> Ok Other
   | _ -> Error "Unknown gender provided"
 
+let gender_encoder = function
+  | Male -> "male"
+  | Female -> "female"
+  | Other -> "other"
+
 let user_schema =
   C.make
     C.Field.
@@ -119,7 +116,7 @@ let validation_errors =
   C.validate Schema.user_schema input
 ```
 
-Try to delete/swap lines of list of fields, to change the constructor or the user type. The compiler forces you to keep these things in sync.
+Try to delete/swap some lines of the list of fields, to change the constructor or the user type. The compiler forces you to keep these three things in sync.
 
 Decoding doesn't validate the data, it just makes sure that the types are correct and translates strings to the correct static types.
 
@@ -138,15 +135,3 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Acknowledgements
 
 The implementation of this project was inspired by [archi](https://github.com/anmonteiro/archi) and [re-web](https://github.com/yawaramin/re-web).
-
-[contributors-shield]: https://img.shields.io/github/contributors/oxidizing/conformist.svg?style=flat-square
-[contributors-url]: https://github.com/oxidizing/conformist/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/oxidizing/conformist.svg?style=flat-square
-[forks-url]: https://github.com/oxidizing/conformist/network/members
-[stars-shield]: https://img.shields.io/github/stars/oxidizing/conformist.svg?style=flat-square
-[stars-url]: https://github.com/oxidizing/conformist/stargazers
-[issues-shield]: https://img.shields.io/github/issues/oxidizing/conformist.svg?style=flat-square
-[issues-url]: https://github.com/oxidizing/conformist/issues
-[license-shield]: https://img.shields.io/github/license/oxidizing/conformist.svg?style=flat-square
-[license-url]: https://github.com/oxidizing/conformist/blob/master/LICENSE.txt
-[release-date]: https://img.shields.io/github/release-date/oxidizing/conformist
