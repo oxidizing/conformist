@@ -1,4 +1,3 @@
-<br />
 <p align="center">
   <!-- <a href="https://github.com/oxidizing/conformist"> -->
   <!--   <img src="images/logo.jpg" alt="Logo" width="400" height="240"> -->
@@ -90,7 +89,7 @@ let user_schema =
   C.make
     C.Field.
       [
-        C.custom gender_decoder ~meta:() "gender";
+        C.custom gender_decoder gender_encoder ~meta:() "gender";
         C.string "email";
         C.date "birthday";
         C.int "nr_of_siblings";
