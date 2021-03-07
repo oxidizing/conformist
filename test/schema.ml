@@ -18,8 +18,17 @@ type user =
   }
 [@@deriving eq, show]
 
-let user gender name email birthday country nr_of_siblings comment wants_premium =
-  { gender; name; email; birthday; country; nr_of_siblings; comment; wants_premium }
+let user gender name email birthday country nr_of_siblings comment wants_premium
+  =
+  { gender
+  ; name
+  ; email
+  ; birthday
+  ; country
+  ; nr_of_siblings
+  ; comment
+  ; wants_premium
+  }
 ;;
 
 let gender_decoder = function

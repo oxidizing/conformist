@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.0] - 2021-03-07
+### Changed
+- A field that is `optional` can be missing from the input data or the value can be `[]`. Decoding and validation will still work as expected. The decoded value is `None`.
+
 ## [0.1.0] - 2020-09-29
 ### Added
 - `Conformist.Field.type_` can be used to retrieve a string representation of the type
