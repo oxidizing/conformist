@@ -60,7 +60,26 @@ let decode_optional () =
       [ "name", [ "Walter" ]; "address", [ "Pineapple Street 3" ] ]
   in
   Alcotest.(
-    check (result testable_schema_optional string) "decodes" expected actual)
+    check (result testable_schema_optional string) "decodes" expected actual);
+  let schema =
+    C.make
+      [ C.string "name"; C.optional (C.string ~default:"Default" "address") ]
+      make
+  in
+  Alcotest.(
+    check
+      (result testable_schema_optional string)
+      "decodes"
+      (Ok (make "Walter" (Some "Default")))
+      (C.decode schema [ "name", [ "Walter" ] ]));
+  Alcotest.(
+    check
+      (result testable_schema_optional string)
+      "decodes"
+      (Ok (make "Walter" (Some "Pineapple Street")))
+      (C.decode
+         schema
+         [ "name", [ "Walter" ]; "address", [ "Pineapple Street" ] ]))
 ;;
 
 let decode_default () =
