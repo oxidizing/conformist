@@ -50,69 +50,66 @@ In your `dune` file:
 Let's look at an example.
 
 ```ocaml
-module C = Conformist
+type occupation =
+  | Mathematician
+  | Engineer
 
-type gender = Male | Female | Other
-
-type user = {
-  gender : gender;
-  email : string;
-  birthday : int * int * int;
-  nr_of_siblings : int;
-  comment : string option;
-  wants_premium : bool;
-}
-
-let user gender email birthday nr_of_siblings comment wants_premium
-    =
-  {
-    gender;
-    email;
-    birthday;
-    nr_of_siblings;
-    comment;
-    wants_premium;
+type user =
+  { occupation : occupation
+  ; email : string
+  ; birthday : int * int * int
+  ; nr_of_siblings : int
+  ; comment : string option
+  ; wants_premium : bool
   }
 
-let gender_decoder = function
-  | "male" -> Ok Male
-  | "female" -> Ok Female
-  | "other" -> Ok Other
-  | _ -> Error "Unknown gender provided"
+let user occupation email birthday nr_of_siblings comment wants_premium =
+  { occupation; email; birthday; nr_of_siblings; comment; wants_premium }
+;;
 
-let gender_encoder = function
-  | Male -> "male"
-  | Female -> "female"
-  | Other -> "other"
+let occupation_decoder = function
+  | "mathematician" -> Ok Mathematician
+  | "engineer" -> Ok Engineer
+  | _ -> Error "Unknown occupation provided"
+;;
+
+let occupation_encoder = function
+  | Mathematician -> "mathematician"
+  | Engineer -> "engineer"
+;;
 
 let user_schema =
-  C.make
-    C.Field.
-      [
-        C.custom gender_decoder gender_encoder ~meta:() "gender";
-        C.string "email";
-        C.date "birthday";
-        C.int "nr_of_siblings";
-        C.optional (C.string "comment");
-        C.bool "wants_premium";
-      ]
-    user
+  Conformist.(
+    make
+      Field.
+        [ custom
+            occupation_decoder
+            occupation_encoder
+            "occupation"
+            ~meta:()
+        ; string "email"
+        ; date "birthday"
+        ; int ~default:0 "nr_of_siblings"
+        ; optional (string "comment")
+        ; bool "wants_premium"
+        ]
+      user)
+;;
 
-let input =
-  [
-    ("gender", [ "male" ]);
-    ("email", [ "test@example.com" ]);
-    ("birthday", [ "2020-12-01" ]);
-    ("nr_of_siblings", [ "3" ]);
-    ("comment", [ "hello" ]);
-    ("wants_premium", [ "true" ]);
-  ]
+  let input =
+    [ "occupation", [ "engineer" ]
+    ; "email", [ "test@example.com" ]
+    ; "birthday", [ "2020-12-01" ]
+    ; "nr_of_siblings", [ "3" ]
+    ; "comment", [ "hello" ]
+    ; "wants_premium", [ "true" ]
+    ]
 
 let user =
-  C.decode Schema.user_schema input
+  Conformist.decode Schema.user_schema input
 
 let validation_errors =
-  C.validate Schema.user_schema input
+  Conformist.validate Schema.user_schema input
 ```
 
 Try to delete/swap some lines of the list of fields, to change the constructor or the user type. The compiler forces you to keep these three things in sync.

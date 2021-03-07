@@ -19,7 +19,9 @@ module Field = struct
 
   type (_, _, _) list =
     | [] : ('meta, 'ty, 'ty) list
-    | ( :: ) : ('meta, 'a) t * ('meta, 'b, 'ty) list -> ('meta, 'a -> 'b, 'ty) list
+    | ( :: ) :
+        ('meta, 'a) t * ('meta, 'b, 'ty) list
+        -> ('meta, 'a -> 'b, 'ty) list
 
   type _ any_field = AnyField : ('meta, 'a) t -> 'meta any_field
 
@@ -40,19 +42,24 @@ module Field = struct
     { name; meta; default; decoder; encoder; type_; validator; optional }
   ;;
 
-  let make_custom decoder encoder ?default ?type_ ?meta ?(validator = always_valid) name =
+  let make_custom
+      decoder
+      encoder
+      ?default
+      ?type_
+      ?meta
+      ?(validator = always_valid)
+      name
+    =
     let type_ = Option.value type_ ~default:name in
     make name meta decoder encoder default type_ validator false
   ;;
 
   let make_optional ?meta field =
     let decoder string =
-      match string with
-      | "" -> Ok None
-      | string ->
-        (match field.decoder string with
-        | Ok result -> Ok (Some result)
-        | Error msg -> Error msg)
+      match field.decoder string with
+      | Ok result -> Ok (Some result)
+      | Error msg -> Error msg
     in
     let validator a =
       match a with
@@ -64,7 +71,15 @@ module Field = struct
       | Some a -> field.encoder a
       | None -> "None"
     in
-    make field.name meta decoder encoder (Some field.default) field.type_ validator true
+    make
+      field.name
+      meta
+      decoder
+      encoder
+      (Some field.default)
+      field.type_
+      validator
+      true
   ;;
 
   let make_bool ?default ?meta ?(msg = "Invalid value provided") name =
@@ -118,7 +133,9 @@ module Field = struct
     let decoder string =
       match String.split_on_char '-' string with
       | [ y; m; d ] ->
-        (match int_of_string_opt y, int_of_string_opt m, int_of_string_opt d with
+        (match
+           int_of_string_opt y, int_of_string_opt m, int_of_string_opt d
+         with
         | Some y, Some m, Some d -> Ok (y, m, d)
         | _ -> Error msg)
       | _ -> Error msg
@@ -225,7 +242,10 @@ let rec decode
           | ctor -> decode { fields; ctor } fields_assoc
           | exception _ ->
             Error
-              (Printf.sprintf "Failed to decode value '%s' of field '%s'" "" field.name))
+              (Printf.sprintf
+                 "Failed to decode value '%s' of field '%s'"
+                 ""
+                 field.name))
         | Error msg ->
           Error
             (Printf.sprintf
@@ -246,5 +266,8 @@ let rec decode
         | exception _ ->
           Error (Printf.sprintf "Failed to construct field '%s'" field.name))
       | None ->
-        Error (Printf.sprintf "Failed to decode field '%s': No value provided" field.name)))
+        Error
+          (Printf.sprintf
+             "Failed to decode field '%s': No value provided"
+             field.name)))
 ;;

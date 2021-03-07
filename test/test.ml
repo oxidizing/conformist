@@ -20,11 +20,15 @@ type schema_optional =
   }
 [@@deriving show, eq]
 
-let testable_schema_optional = Alcotest.testable pp_schema_optional equal_schema_optional
+let testable_schema_optional =
+  Alcotest.testable pp_schema_optional equal_schema_optional
+;;
 
 let decode_optional () =
   let make name address = { name; address } in
-  let schema = C.make [ C.string "name"; C.optional (C.string "address") ] make in
+  let schema =
+    C.make [ C.string "name"; C.optional (C.string "address") ] make
+  in
   Alcotest.(
     check
       (result testable_schema_optional string)
@@ -36,6 +40,12 @@ let decode_optional () =
       (result testable_schema_optional string)
       "decodes"
       (Ok (make "Walter" None))
+      (C.decode schema [ "name", [ "Walter" ] ]));
+  Alcotest.(
+    check
+      (result testable_schema_optional string)
+      "decodes"
+      (Ok (make "Walter" (Some "")))
       (C.decode schema [ "name", [ "Walter" ]; "address", [ "" ] ]));
   Alcotest.(
     check
@@ -45,28 +55,41 @@ let decode_optional () =
       (C.decode schema [ "name", [ "Walter" ]; "address", [] ]));
   let expected = Ok (make "Walter" (Some "Pineapple Street 3")) in
   let actual =
-    C.decode schema [ "name", [ "Walter" ]; "address", [ "Pineapple Street 3" ] ]
+    C.decode
+      schema
+      [ "name", [ "Walter" ]; "address", [ "Pineapple Street 3" ] ]
   in
-  Alcotest.(check (result testable_schema_optional string) "decodes" expected actual)
+  Alcotest.(
+    check (result testable_schema_optional string) "decodes" expected actual)
 ;;
 
 let decode_default () =
   let make name address = { name; address } in
   let schema =
-    C.make [ C.string ~default:"Walter" "name"; C.optional (C.string "address") ] make
+    C.make
+      [ C.string ~default:"Walter" "name"
+      ; C.optional (C.string ~default:"Default address" "address")
+      ]
+      make
   in
   Alcotest.(
     check
       (result testable_schema_optional string)
       "decodes"
-      (Ok (make "Walter" None))
+      (Ok (make "Walter" (Some "Default address")))
+      (C.decode schema []));
+  Alcotest.(
+    check
+      (result testable_schema_optional string)
+      "decodes"
+      (Ok (make "Walter" (Some "")))
       (C.decode schema [ "address", [ "" ] ]));
   Alcotest.(
     check
       (result testable_schema_optional string)
       "decodes"
-      (Ok (make "Jesse" None))
-      (C.decode schema [ "name", [ "Jesse" ]; "address", [ "" ] ]))
+      (Ok (make "Jesse" (Some "Default address")))
+      (C.decode schema [ "name", [ "Jesse" ] ]))
 ;;
 
 (* Testing multiple fields *)
@@ -84,13 +107,16 @@ let decode_multi () =
   let schema = C.make [ C.string "name"; C.int "age" ] make in
   let expected = Error "Failed to decode field 'name': No value provided" in
   let actual = C.decode schema [] in
-  Alcotest.(check (result testable_schema_multi string) "has no values" expected actual);
+  Alcotest.(
+    check (result testable_schema_multi string) "has no values" expected actual);
   let expected = Error "Failed to decode field 'name': No value provided" in
   let actual = C.decode schema [ "age", [ "foo" ] ] in
-  Alcotest.(check (result testable_schema_multi string) "has no values" expected actual);
+  Alcotest.(
+    check (result testable_schema_multi string) "has no values" expected actual);
   let expected = Ok (make "Walter" 33) in
   let actual = C.decode schema [ "name", [ "Walter" ]; "age", [ "33" ] ] in
-  Alcotest.(check (result testable_schema_multi string) "decodes" expected actual)
+  Alcotest.(
+    check (result testable_schema_multi string) "decodes" expected actual)
 ;;
 
 (* Testing complex example from schema.ml *)
@@ -112,8 +138,8 @@ let decode_complete_and_invalid_input () =
       testable_decode_result
       "has one error"
       (Error
-         "Failed to decode value 'nr_of_siblings' of field 'fail': Invalid number \
-          provided")
+         "Failed to decode value 'nr_of_siblings' of field 'fail': Invalid \
+          number provided")
       actual)
 ;;
 
@@ -144,6 +170,33 @@ let decode_complete_and_valid_input () =
   Alcotest.(check testable_decode_result "can decode" (Ok expected) actual)
 ;;
 
+let validate_default () =
+  let make name address = { name; address } in
+  let schema =
+    C.make [ C.string "name"; C.optional (C.string "address") ] make
+  in
+  Alcotest.(
+    check
+      testable_validation_error
+      "no name"
+      [ "name", "No value provided" ]
+      (C.validate schema []));
+  Alcotest.(
+    check
+      testable_validation_error
+      "validates"
+      []
+      (C.validate schema [ "name", [ "Walter" ] ]));
+  Alcotest.(
+    check
+      testable_validation_error
+      "validates"
+      []
+      (C.validate
+         schema
+         [ "name", [ "Walter" ]; "address", [ "Pineapple Street" ] ]))
+;;
+
 let validate_incomplete_input () =
   let actual = C.validate Schema.user_schema [] in
   Alcotest.(
@@ -157,7 +210,9 @@ let validate_incomplete_input () =
       ])
     actual;
   let actual =
-    C.validate Schema.user_schema [ "gender", [ "foo" ]; "birthday", [ "2000-10-23" ] ]
+    C.validate
+      Schema.user_schema
+      [ "gender", [ "foo" ]; "birthday", [ "2000-10-23" ] ]
   in
   Alcotest.(
     check
@@ -191,15 +246,16 @@ let () =
   let open Alcotest in
   run
     "conformist"
-    [ ( "decode data"
+    [ ( "decode"
       , [ test_case "optional" `Quick decode_optional
         ; test_case "default" `Quick decode_default
         ; test_case "multi" `Quick decode_multi
         ; test_case "invalid input" `Quick decode_complete_and_invalid_input
         ; test_case "valid input" `Quick decode_complete_and_valid_input
         ] )
-    ; ( "validate date"
-      , [ test_case "incomplete input" `Quick validate_incomplete_input
+    ; ( "validate"
+      , [ test_case "default" `Quick validate_default
+        ; test_case "incomplete input" `Quick validate_incomplete_input
         ; test_case "complete input" `Quick validate_complete_input
         ] )
     ]
