@@ -1,4 +1,6 @@
-# Changelog
+## 0.2.1 - 2021-03-16
+### Changed
+- Replace `ppx_deriving` with `sexplib`
 
 ## [0.2.0] - 2021-03-07
 ### Changed

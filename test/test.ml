@@ -4,7 +4,30 @@ module C = Conformist
 
 let testable_form = Alcotest.testable Schema.pp_user Schema.equal_user
 
-type validation_error = (string * string) list [@@deriving show, eq]
+type validation_error = (string * string) list
+
+let validation_error_to_sexp e =
+  let open Sexplib0.Sexp_conv in
+  let open Sexplib0.Sexp in
+  List
+    (List.map
+       (fun (k, v) ->
+         List
+           [ List [ Atom "key"; sexp_of_string k ]
+           ; List [ Atom "error"; sexp_of_string v ]
+           ])
+       e)
+;;
+
+let pp_validation_error fmt t =
+  Sexplib0.Sexp.pp_hum fmt (validation_error_to_sexp t)
+;;
+
+let equal_validation_error e1 e2 =
+  String.equal
+    (Format.asprintf "%a" pp_validation_error e1)
+    (Format.asprintf "%a" pp_validation_error e2)
+;;
 
 let testable_validation_error =
   Alcotest.testable pp_validation_error equal_validation_error
@@ -18,7 +41,25 @@ type schema_optional =
   { name : string
   ; address : string option
   }
-[@@deriving show, eq]
+
+let schema_option_to_sexp s =
+  let open Sexplib0.Sexp_conv in
+  let open Sexplib0.Sexp in
+  List
+    [ List [ Atom "name"; sexp_of_string s.name ]
+    ; List [ Atom "address"; sexp_of_option sexp_of_string s.address ]
+    ]
+;;
+
+let pp_schema_optional fmt t =
+  Sexplib0.Sexp.pp_hum fmt (schema_option_to_sexp t)
+;;
+
+let equal_schema_optional s1 s2 =
+  String.equal
+    (Format.asprintf "%a" pp_schema_optional s1)
+    (Format.asprintf "%a" pp_schema_optional s2)
+;;
 
 let testable_schema_optional =
   Alcotest.testable pp_schema_optional equal_schema_optional
@@ -117,7 +158,23 @@ type schema_multi =
   { name : string
   ; age : int
   }
-[@@deriving show, eq]
+
+let schema_multi_to_sexp s =
+  let open Sexplib0.Sexp_conv in
+  let open Sexplib0.Sexp in
+  List
+    [ List [ Atom "name"; sexp_of_string s.name ]
+    ; List [ Atom "age"; sexp_of_int s.age ]
+    ]
+;;
+
+let pp_schema_multi fmt t = Sexplib0.Sexp.pp_hum fmt (schema_multi_to_sexp t)
+
+let equal_schema_multi s1 s2 =
+  String.equal
+    (Format.asprintf "%a" pp_schema_multi s1)
+    (Format.asprintf "%a" pp_schema_multi s2)
+;;
 
 let testable_schema_multi = Alcotest.testable pp_schema_multi equal_schema_multi
 

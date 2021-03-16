@@ -2,7 +2,7 @@
 (generate_opam_files true)
 
 (name conformist)
-(version 0.2.0)
+(version 0.2.1)
 
 (authors "Josef Erben")
 (source (github oxidizing/conformist))
@@ -28,5 +28,4 @@ Arbitrary meta data can be stored in schemas which is useful to build functional
 
   ;; Test
   (alcotest (and (>= 1.2.3) :with-test))
-  (ppx_deriving (and (>= 4.5) :with-test))
-  (ppx_fields_conv (and (>= v0.14.1) :with-test))))
+  (sexplib (and (>= v0.13.0) :with-test))))
