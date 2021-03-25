@@ -2,7 +2,7 @@
 (generate_opam_files true)
 
 (name conformist)
-(version 0.2.1)
+(version 0.3.0)
 
 (authors "Josef Erben")
 (source (github oxidizing/conformist))
