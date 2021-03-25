@@ -1,3 +1,10 @@
+## 0.3.0 - 2021-03-26
+### Changed
+- `decode` returns a triple containing `(field_name, input, error_msg)` instead of a concatenated string. This makes it easier to extract information.
+
+### Added
+- `decode_and_validate` combines `decode` and `validate` where the returned value is either the decoded value or a list of errors. When using `decode_and_validate`, one can forget about the difference between `decode` and `validate` and simply forward the list of errors. This covers a common use case.
+
 ## 0.2.1 - 2021-03-16
 ### Changed
 - Replace `ppx_deriving` with `sexplib`

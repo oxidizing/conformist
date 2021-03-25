@@ -309,12 +309,41 @@ type validation_error = (string * string) list
     This is typically some user input. *)
 type input = (string * string list) list
 
-(** [decode schema input] tries to create a value of the static type ['ty]. Note
-    that a successfully decoded value means that the strings contain the
-    expected types, but no validation logic was executed. *)
-val decode : ('meta, 'ctor, 'ty) t -> input -> ('ty, string) result
+(** [decode schema input] returns the decoded value of type ['ty] by decoding
+    the [input] using the [schema].
 
-(** [validate schema input] runs the field validators on decoded data. Note that
-    a field that fails to decode will also fail validation, but a decoded field
-    might still fail validation. *)
+    The returned error value is a triple [(field_name, input_value, error_msg)].
+    [field_name] is the field name of the input that failed to decode,
+    [input_value] is the input value if one was provided and [error_msg] is the
+    error message.
+
+    No validation logic is executed in this step. *)
+val decode
+  :  ('meta, 'ctor, 'ty) t
+  -> input
+  -> ('ty, string * string option * string) result
+
+(** [validate schema input] returns a list of validation errors by running the
+    validators defined in [schema] on the [input] data. An empty list implies
+    that there are no validation errors and that the input is valid according to
+    the schema.
+
+    Note that [input] that has no validation errors might still fail to decode,
+    depending on the validation functions specified in [schema]. *)
 val validate : ('meta, 'ctor, 'ty) t -> input -> validation_error
+
+(** [decode_and_validate schema input] returns the decoded and validated value
+    of type ['ty] by decoding the [input] using the [schema] and running its
+    validators.
+
+    The returned error is a {!type:validation_error}. If a field fails to
+    decode, the error of that field is the decode error. If a field decodes but
+    fails to validate, then the error is the validation error.
+
+    Use [decode_and_validate] to combine the functions [decode] and [validate]
+    and to either end up with the decoded value or all errors that happened
+    during the decoding and validation steps. *)
+val decode_and_validate
+  :  ('meta, 'ctor, 'ty) t
+  -> input
+  -> ('ty, validation_error) Result.t
