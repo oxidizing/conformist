@@ -1,3 +1,10 @@
+## 0.4.0 - 2021-03-26
+### Changed
+- `decode`, `validate` and `decode_and_validate` all return the same `error` type
+
+### Added
+- Improve error reporting by printing provided input values (list of values)
+
 ## 0.3.0 - 2021-03-26
 ### Changed
 - `decode` returns a triple containing `(field_name, input, error_msg)` instead of a concatenated string. This makes it easier to extract information.

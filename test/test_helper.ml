@@ -5,10 +5,11 @@ let validation_error_to_sexp e =
   let open Sexplib0.Sexp in
   List
     (List.map
-       (fun (k, v) ->
+       (fun (f, v, msg) ->
          List
-           [ List [ Atom "name"; sexp_of_string k ]
-           ; List [ Atom "error"; sexp_of_string v ]
+           [ List [ Atom "name"; sexp_of_string f ]
+           ; List [ Atom "value"; sexp_of_option sexp_of_string v ]
+           ; List [ Atom "error"; sexp_of_string msg ]
            ])
        e)
 ;;

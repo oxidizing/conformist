@@ -242,7 +242,7 @@ let validate_default () =
     check
       testable_validation_error
       "no name"
-      [ "name", "No value provided" ]
+      [ "name", None, "No value provided" ]
       (C.validate schema []));
   Alcotest.(
     check
@@ -266,10 +266,10 @@ let validate_incomplete_input () =
     check
       testable_validation_error
       "has error"
-      [ "name", "No value provided"
-      ; "email", "No value provided"
-      ; "birthday", "No value provided"
-      ; "country", "No value provided"
+      [ "name", None, "No value provided"
+      ; "email", None, "No value provided"
+      ; "birthday", None, "No value provided"
+      ; "country", None, "No value provided"
       ])
     actual;
   let actual =
@@ -281,10 +281,10 @@ let validate_incomplete_input () =
     check
       testable_validation_error
       "has error"
-      [ "gender", "Unknown gender provided"
-      ; "name", "No value provided"
-      ; "email", "No value provided"
-      ; "country", "No value provided"
+      [ "gender", Some "foo", "Unknown gender provided"
+      ; "name", None, "No value provided"
+      ; "email", None, "No value provided"
+      ; "country", None, "No value provided"
       ]
       actual)
 ;;
@@ -312,10 +312,10 @@ let decode_and_validate_incomplete_input () =
       (result testable_user_form testable_validation_error)
       "has error"
       (Error
-         [ "name", "No value provided"
-         ; "email", "No value provided"
-         ; "birthday", "No value provided"
-         ; "country", "No value provided"
+         [ "name", None, "No value provided"
+         ; "email", None, "No value provided"
+         ; "birthday", None, "No value provided"
+         ; "country", None, "No value provided"
          ]))
     actual;
   let actual =
@@ -328,10 +328,10 @@ let decode_and_validate_incomplete_input () =
       (result testable_user_form testable_validation_error)
       "has error"
       (Error
-         [ "gender", "Unknown gender provided"
-         ; "name", "No value provided"
-         ; "email", "No value provided"
-         ; "country", "No value provided"
+         [ "gender", Some "foo", "Unknown gender provided"
+         ; "name", None, "No value provided"
+         ; "email", None, "No value provided"
+         ; "country", None, "No value provided"
          ])
       actual)
 ;;
