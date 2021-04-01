@@ -1,5 +1,5 @@
 (** Conformist is a library for creating and validating schemas. It provides
-    run-time types without using any ppx. It can be used to validate incoming
+    run-time types without the use of ppx. It can be used to validate incoming
     data and to translate it to static types for safe usage. *)
 
 (** {1 Example}
@@ -14,7 +14,7 @@
       type user =
         { occupation : occupation
         ; email : string
-        ; birthday : int * int * int
+        ; birthday : Ptime.t
         ; nr_of_siblings : int
         ; comment : string option
         ; wants_premium : bool
@@ -75,7 +75,7 @@
         let input =
           [ "occupation", [ "engineer" ]
           ; "email", [ "test@example.com" ]
-          ; "birthday", [ "2020-12-01" ]
+          ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
           ; "nr_of_siblings", [ "3" ]
           ; "comment", [ "hello" ]
           ; "wants_premium", [ "true" ]
@@ -95,7 +95,7 @@
         let input =
           [ "occupation", [ "engineer" ]
           ; "email", [ "test@example.com" ]
-          ; "birthday", [ "2020-12-01" ]
+          ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
           ; "nr_of_siblings", [ "3" ]
           ; "comment", [ "hello" ]
           ; "wants_premium", [ "true" ]
@@ -106,7 +106,9 @@
     ]}
 
     Note that if decoding of a field fails, validation fails as well since
-    before a field is validated it gets decoded. *)
+    before a field is validated it gets decoded.
+
+    Use {!decode_and_validate} to do both steps. *)
 
 (** {1 Fields}
 
@@ -215,11 +217,15 @@ val custom
     ]} *)
 val optional : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
 
-(** [bool ?default ?meta ?msg field_name] creates a field with [field_name] some
-    [meta] data and a custom decode error message [msg] that decodes to a
-    boolean.
+(** [bool ?default ?meta ?msg field_name] returns a field with name [field_name]
+    that decodes to a [bool].
 
-    A [default] value can be provided. *)
+    [default] is an optional default value for the field.
+
+    [meta] is optional meta data that is attached to the field. This is useful
+    when implementing features on top of conformist.
+
+    [msg] is the decode error message that is returned if {!decode} fails. *)
 val bool
   :  ?default:bool
   -> ?meta:'a
@@ -227,11 +233,19 @@ val bool
   -> string
   -> ('a, bool) Field.t
 
-(** [float ?meta ?msg ?validator field_name] creates a field that decodes to a
-    float with [field_name] some [meta] data, a custom decode error message
-    [msg] and a [validator].
+(** [float ?default ?meta ?msg ?validator field_name] returns a field with name
+    [field_name] that decodes to [float].
 
-    A [default] value can be provided. *)
+    [default] is an optional default value for the field.
+
+    [meta] is optional meta data that is attached to the field. This is useful
+    when implementing features on top of conformist.
+
+    [msg] is the decode error message that is returned if {!decode} fails.
+
+    [validator] is an optional validator that is run when calling {!validate}.
+    By default, no validation logic is executed. This means that if a value
+    decodes, it is valid. *)
 val float
   :  ?default:float
   -> ?meta:'a
@@ -240,11 +254,19 @@ val float
   -> string
   -> ('a, float) Field.t
 
-(** [int ?meta ?msg ?validator field_name] creates a field that decodes to an
-    int with [field_name] some [meta] data, a custom decode error message [msg]
-    and a [validator].
+(** [int ?meta ?msg ?validator field_name] returns a field with name
+    [field_name] that decodes to [int].
 
-    A [default] value can be provided. *)
+    [default] is an optional default value for the field.
+
+    [meta] is optional meta data that is attached to the field. This is useful
+    when implementing features on top of conformist.
+
+    [msg] is the decode error message that is returned if {!decode} fails.
+
+    [validator] is an optional validator that is run when calling {!validate}.
+    By default, no validation logic is executed. This means that if a value
+    decodes, it is valid. *)
 val int
   :  ?default:int
   -> ?meta:'a
@@ -253,11 +275,19 @@ val int
   -> string
   -> ('a, int) Field.t
 
-(** [string ?meta ?validator field_name] creates a field that decodes to a
-    string with [field_name] some [meta] data and a [validator]. Note that this
-    field does not need to be decoded, but it can still be validated.
+(** [string ?meta ?validator field_name] return a field with name [field_name]
+    that decodes to [string].
 
-    A [default] value can be provided. *)
+    [default] is an optional default value for the field.
+
+    [meta] is optional meta data that is attached to the field. This is useful
+    when implementing features on top of conformist.
+
+    [msg] is the decode error message that is returned if {!decode} fails.
+
+    [validator] is an optional validator that is run when calling {!validate}.
+    By default, no validation logic is executed. This means that if a value
+    decodes, it is valid. *)
 val string
   :  ?default:string
   -> ?meta:'a
@@ -265,20 +295,36 @@ val string
   -> string
   -> ('a, string) Field.t
 
-(** Valid date example: 2020-11-25, this type is compatible with Ptime.date *)
-type date = int * int * int
-
-(** [date ?meta ?validator field_name] creates a field that decodes to a date
-    with [field_name] some [meta] data and a [validator].
-
-    A [default] value can be provided. *)
+(** Don't use [date], use {!datetime} instead.*)
 val date
-  :  ?default:date
+  :  ?default:Ptime.date
   -> ?meta:'a
   -> ?msg:string
   -> ?validator:(int * int * int) validator
   -> string
-  -> ('a, date) Field.t
+  -> ('a, Ptime.date) Field.t
+  [@@ocaml.deprecated "Use [Conformist.datetime] instead."]
+
+(** [datetime ?default ?meta ?validator field_name] returns a field with name
+    [field_name] that decodes to [string].
+
+    [default] is an optional default value for the field.
+
+    [meta] is optional meta data that is attached to the field. This is useful
+    when implementing features on top of conformist.
+
+    [msg] is the decode error message that is returned if {!decode} fails.
+
+    [validator] is an optional validator that is run when calling {!validate}.
+    By default, no validation logic is executed. This means that if a value
+    decodes, it is valid. *)
+val datetime
+  :  ?default:Ptime.t
+  -> ?meta:'a
+  -> ?msg:string
+  -> ?validator:Ptime.t validator
+  -> string
+  -> ('a, Ptime.t) Field.t
 
 (** {1 Schema}
 

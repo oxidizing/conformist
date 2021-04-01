@@ -23,7 +23,7 @@ type user =
   { gender : gender
   ; name : string
   ; email : string
-  ; birthday : int * int * int
+  ; birthday : Ptime.t
   ; country : string
   ; nr_of_siblings : int
   ; comment : string option
@@ -43,12 +43,11 @@ let user_to_sexp
   =
   let open Sexplib0.Sexp_conv in
   let open Sexplib0.Sexp in
-  let y, m, d = birthday in
   List
     [ List [ Atom "gender"; sexp_of_gender gender ]
     ; List [ Atom "name"; sexp_of_string name ]
     ; List [ Atom "email"; sexp_of_string email ]
-    ; List [ Atom "birthday"; sexp_of_string (Format.sprintf "%d-%d-%d" y m d) ]
+    ; List [ Atom "birthday"; sexp_of_string (Ptime.to_rfc3339 birthday) ]
     ; List [ Atom "country"; sexp_of_string country ]
     ; List [ Atom "nr_of_siblings"; sexp_of_int nr_of_siblings ]
     ; List [ Atom "comment"; sexp_of_option sexp_of_string comment ]
@@ -97,7 +96,7 @@ let user_schema =
       [ C.custom gender_decoder gender_encoder ~default:Female "gender" ~meta:()
       ; C.string "name"
       ; C.string "email"
-      ; C.date "birthday"
+      ; C.datetime "birthday"
       ; C.string "country"
       ; C.int ~default:0 "nr_of_siblings"
       ; C.optional (C.string "comment")

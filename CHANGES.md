@@ -1,3 +1,7 @@
+## 0.5.0 - 2021-04-12
+### Added
+- Conformist type `datetime` that decodes to `Ptime.t`. This replaces `date` which has been deprecated.
+
 ## 0.4.0 - 2021-03-26
 ### Changed
 - `decode`, `validate` and `decode_and_validate` all return the same `error` type

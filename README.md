@@ -23,7 +23,7 @@
 
 ## About
 
-Conformist allows you to define schemas to decode, validate and sanitize input data declaratively. It comes with runtime types for primitive OCaml types such as `int`, `string`, `bool` and `float` but also `Ptime.date`, optional and custom types. Re-use business rules in validators and run it on the client side with [js_of_ocaml](https://github.com/ocsigen/js_of_ocaml/). Arbitrary meta data can be stored in schemas which is useful to build functionality on top of conformist.
+Conformist allows you to define schemas to decode, validate and sanitize input data declaratively. It comes with runtime types for primitive OCaml types such as `int`, `string`, `bool`, `float` and`Ptime.t`, optional and custom types. Re-use business rules in validators and run it on the client side with [js_of_ocaml](https://github.com/ocsigen/js_of_ocaml/). Arbitrary meta data can be stored in schemas which is useful to build functionality on top of conformist.
 
 Typical use cases are enforcing invariants of models or user input sanitization.
 
@@ -57,7 +57,7 @@ type occupation =
 type user =
   { occupation : occupation
   ; email : string
-  ; birthday : int * int * int
+  ; birthday : Ptime.t
   ; nr_of_siblings : int
   ; comment : string option
   ; wants_premium : bool
@@ -99,7 +99,7 @@ let user_schema =
   let input =
     [ "occupation", [ "engineer" ]
     ; "email", [ "test@example.com" ]
-    ; "birthday", [ "2020-12-01" ]
+    ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
     ; "nr_of_siblings", [ "3" ]
     ; "comment", [ "hello" ]
     ; "wants_premium", [ "true" ]

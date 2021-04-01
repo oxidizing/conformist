@@ -1,4 +1,10 @@
-open Test_helper
+let testable_error = Alcotest.(triple string (option string) string)
+let testable_errors = Alcotest.(list testable_error)
+
+let testable_decode_result testable' =
+  Alcotest.(result testable' testable_error)
+;;
+
 module C = Conformist
 
 (* Testing optional fields *)
@@ -185,7 +191,7 @@ let decode_complete_and_invalid_input () =
   let input =
     [ "gender", [ "male" ]
     ; "name", [ "walter" ]
-    ; "birthday", [ "2020-12-01" ]
+    ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
     ; "email", [ "test@example.com" ]
     ; "country", [ "Switzerland" ]
     ; "nr_of_siblings", [ "fail" ]
@@ -202,10 +208,15 @@ let decode_complete_and_invalid_input () =
 ;;
 
 let decode_complete_and_valid_input () =
+  let birthday =
+    match Ptime.of_rfc3339 "2020-12-01T00:00:00.00Z" with
+    | Ok (time, _, _) -> time
+    | Error _ -> failwith "Invalid date provided"
+  in
   let input =
     [ "gender", [ "male" ]
     ; "name", [ "walter" ]
-    ; "birthday", [ "2020-12-01" ]
+    ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
     ; "email", [ "test@example.com" ]
     ; "country", [ "Switzerland" ]
     ; "nr_of_siblings", [ "3" ]
@@ -219,7 +230,7 @@ let decode_complete_and_valid_input () =
       Schema.Male
       "walter"
       "test@example.com"
-      (2020, 12, 01)
+      birthday
       "Switzerland"
       3
       (Some "hello")
@@ -240,19 +251,19 @@ let validate_default () =
   in
   Alcotest.(
     check
-      testable_validation_error
+      testable_errors
       "no name"
       [ "name", None, "No value provided" ]
       (C.validate schema []));
   Alcotest.(
     check
-      testable_validation_error
+      testable_errors
       "validates"
       []
       (C.validate schema [ "name", [ "Walter" ] ]));
   Alcotest.(
     check
-      testable_validation_error
+      testable_errors
       "validates"
       []
       (C.validate
@@ -264,7 +275,7 @@ let validate_incomplete_input () =
   let actual = C.validate Schema.user_schema [] in
   Alcotest.(
     check
-      testable_validation_error
+      testable_errors
       "has error"
       [ "name", None, "No value provided"
       ; "email", None, "No value provided"
@@ -275,11 +286,11 @@ let validate_incomplete_input () =
   let actual =
     C.validate
       Schema.user_schema
-      [ "gender", [ "foo" ]; "birthday", [ "2000-10-23" ] ]
+      [ "gender", [ "foo" ]; "birthday", [ "2020-12-01T00:00:00.00Z" ] ]
   in
   Alcotest.(
     check
-      testable_validation_error
+      testable_errors
       "has error"
       [ "gender", Some "foo", "Unknown gender provided"
       ; "name", None, "No value provided"
@@ -293,7 +304,7 @@ let validate_complete_input () =
   let input =
     [ "gender", [ "male" ]
     ; "name", [ "walter" ]
-    ; "birthday", [ "2020-12-01" ]
+    ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
     ; "email", [ "test@example.com" ]
     ; "country", [ "Switzerland" ]
     ; "nr_of_siblings", [ "3" ]
@@ -302,14 +313,14 @@ let validate_complete_input () =
     ]
   in
   let actual = C.validate Schema.user_schema input in
-  Alcotest.(check testable_validation_error "can validate" [] actual)
+  Alcotest.(check testable_errors "can validate" [] actual)
 ;;
 
 let decode_and_validate_incomplete_input () =
   let actual = C.decode_and_validate Schema.user_schema [] in
   Alcotest.(
     check
-      (result testable_user_form testable_validation_error)
+      (result testable_user_form testable_errors)
       "has error"
       (Error
          [ "name", None, "No value provided"
@@ -321,11 +332,11 @@ let decode_and_validate_incomplete_input () =
   let actual =
     C.decode_and_validate
       Schema.user_schema
-      [ "gender", [ "foo" ]; "birthday", [ "2000-10-23" ] ]
+      [ "gender", [ "foo" ]; "birthday", [ "2020-12-01T00:00:00.00Z" ] ]
   in
   Alcotest.(
     check
-      (result testable_user_form testable_validation_error)
+      (result testable_user_form testable_errors)
       "has error"
       (Error
          [ "gender", Some "foo", "Unknown gender provided"
@@ -340,7 +351,7 @@ let decode_and_validate_complete_and_valid_input () =
   let input =
     [ "gender", [ "male" ]
     ; "name", [ "walter" ]
-    ; "birthday", [ "2020-12-01" ]
+    ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
     ; "email", [ "test@example.com" ]
     ; "country", [ "Switzerland" ]
     ; "nr_of_siblings", [ "3" ]
@@ -349,22 +360,48 @@ let decode_and_validate_complete_and_valid_input () =
     ]
   in
   let actual = C.decode_and_validate Schema.user_schema input in
+  let birthday =
+    match Ptime.of_rfc3339 "2020-12-01T00:00:00.00Z" with
+    | Ok (time, _, _) -> time
+    | Error _ -> failwith "Invalid date provided"
+  in
   Alcotest.(
     check
-      (result testable_user_form testable_validation_error)
+      (result testable_user_form testable_errors)
       "can validate"
       (Ok
          Schema.
            { gender = Schema.Male
            ; name = "walter"
            ; email = "test@example.com"
-           ; birthday = 2020, 12, 01
+           ; birthday
            ; country = "Switzerland"
            ; nr_of_siblings = 3
            ; comment = Some "hello"
            ; wants_premium = true
            })
       actual)
+;;
+
+type datetime = { datetime : Ptime.t }
+
+let create_datetime datetime = { datetime }
+let datetime = C.make [ C.datetime ~meta:() "datetime" ] create_datetime
+
+let decode_and_validate_datetime () =
+  let input = [ "datetime", [ "invalid datetime" ] ] in
+  let expected =
+    "datetime", Some "invalid datetime", "Invalid datetime provided"
+  in
+  let actual = C.decode datetime input |> Result.get_error in
+  Alcotest.(check testable_error "invalid date" expected actual);
+  let input = [ "datetime", [ "2020-12-01" ] ] in
+  let expected = "datetime", Some "2020-12-01", "Invalid datetime provided" in
+  let actual = C.decode datetime input |> Result.get_error in
+  Alcotest.(check testable_error "invalid date" expected actual);
+  let input = [ "datetime", [ "2020-12-01T00:00:00.00Z" ] ] in
+  let actual = Result.is_ok (C.decode datetime input) in
+  Alcotest.(check bool "valid date" true actual)
 ;;
 
 let () =
@@ -392,6 +429,7 @@ let () =
             "complete and valid input"
             `Quick
             decode_and_validate_complete_and_valid_input
+        ; test_case "datetime" `Quick decode_and_validate_datetime
         ] )
     ]
 ;;

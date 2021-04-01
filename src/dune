@@ -1,3 +1,4 @@
 (library
  (name conformist)
- (public_name conformist))
+ (public_name conformist)
+ (libraries ptime))
