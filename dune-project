@@ -2,7 +2,7 @@
 (generate_opam_files true)
 
 (name conformist)
-(version 0.4.0)
+(version 0.5.0)
 
 (authors "Josef Erben")
 (source (github oxidizing/conformist))
@@ -22,10 +22,8 @@ Re-use business rules in validators and run it on the client side with js_of_oca
 Arbitrary meta data can be stored in schemas which is useful to build functionality on top of conformist.
 ")
  (depends
-  ;; General system dependencies
   (dune (>= 2.4))
   (ocaml (>= 4.08.0))
-
-  ;; Test
+  (ptime (>= 0.8.5))
   (alcotest (and (>= 1.2.3) :with-test))
   (sexplib (and (>= v0.13.0) :with-test))))

@@ -1,4 +1,3 @@
-type date = int * int * int
 type 'a decoder = string -> ('a, string) result
 type 'a encoder = 'a -> string
 type 'a validator = 'a -> string option
@@ -143,6 +142,22 @@ module Field = struct
     let encoder (y, m, d) = Format.sprintf "%d-%d-%d" y m d in
     make name meta decoder encoder default "date" validator false
   ;;
+
+  let make_datetime
+      ?default
+      ?meta
+      ?(msg = "Invalid datetime provided")
+      ?(validator = always_valid)
+      name
+    =
+    let decoder string =
+      match Ptime.of_rfc3339 string with
+      | Ok (timestamp, _, _) -> Ok timestamp
+      | Error (`RFC3339 (_, _)) -> Error msg
+    in
+    let encoder ptime = Ptime.to_rfc3339 ptime in
+    make name meta decoder encoder default "time" validator false
+  ;;
 end
 
 let custom = Field.make_custom
@@ -152,6 +167,7 @@ let float = Field.make_float
 let int = Field.make_int
 let string = Field.make_string
 let date = Field.make_date
+let datetime = Field.make_datetime
 
 type ('meta, 'ctor, 'ty) t =
   { fields : ('meta, 'ctor, 'ty) Field.list

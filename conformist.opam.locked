@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "0.2.1"
+version: "0.5.0"
 synopsis:
   "Conformist allows you to define schemas to decode, validate and sanitize input data declaratively"
 description: """
@@ -19,10 +19,15 @@ depends: [
   "base-bigarray" {= "base"}
   "base-threads" {= "base"}
   "base-unix" {= "base"}
+  "conf-m4" {= "1"}
   "dune" {= "2.8.4"}
   "ocaml" {= "4.08.1"}
-  "ocaml-config" {= "1"}
   "ocaml-system" {= "4.08.1"}
+  "ocamlbuild" {= "0.14.0"}
+  "ocamlfind" {= "1.8.1"}
+  "ptime" {= "0.8.5"}
+  "result" {= "1.5"}
+  "topkg" {= "1.0.3"}
 ]
 build: [
   ["dune" "subst"] {pinned}
