@@ -17,7 +17,7 @@
  (synopsis "Conformist allows you to define schemas to decode, validate and sanitize input data declaratively")
  (description "
 Conformist allows you to define schemas to decode, validate and sanitize input data declaratively.
-It comes with runtime types for primitive OCaml types such as `int`, `string`, `bool` and `float` but also `Ptime.date`, optional and custom types.
+It comes with runtime types for primitive OCaml types such as `int`, `string`, `bool` and `float` but also `Ptime.t`, `option` and custom types.
 Re-use business rules in validators and run it on the client side with js_of_ocaml.
 Arbitrary meta data can be stored in schemas which is useful to build functionality on top of conformist.
 ")
