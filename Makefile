@@ -1,3 +1,12 @@
+.PHONY: deps
+deps: ## Install development dependencies
+	opam install -y dune-release merlin ocamlformat utop
+	OPAMSOLVERTIMEOUT=240 opam install --deps-only --with-test --with-doc -y .
+
+.PHONY: create_switch
+create_switch:
+	opam switch create . --no-install
+
 .PHONY: format
 format: ## Format the codebase with ocamlformat
 	opam exec -- dune build --root . --auto-promote @fmt
