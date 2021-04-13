@@ -306,7 +306,7 @@ val date
   [@@ocaml.deprecated "Use [Conformist.datetime] instead."]
 
 (** [datetime ?default ?meta ?validator field_name] returns a field with name
-    [field_name] that decodes to [string].
+    [field_name] that decodes to [datetime].
 
     [default] is an optional default value for the field.
 
