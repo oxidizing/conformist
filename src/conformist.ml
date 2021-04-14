@@ -34,6 +34,7 @@ module Field = struct
   ;;
 
   let optional (AnyField field) = field.optional
+  let is_optional (AnyField field) = field.optional
   let type_ (AnyField field) = field.type_
   let encode_default (AnyField field) = Option.map field.encoder field.default
 
@@ -207,7 +208,7 @@ let validate schema input =
       let value = Format.sprintf "[%s]" (String.concat ", " values) in
       List.cons (name, Some value, "Multiple values provided") errors
     | exception Not_found ->
-      (match Field.optional field, Field.encode_default field with
+      (match Field.is_optional field, Field.encode_default field with
       | _, Some default ->
         (match Field.validate field default with
         | Some msg -> List.cons (name, None, msg) errors

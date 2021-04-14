@@ -81,35 +81,28 @@ let occupation_encoder = function
 let user_schema =
   Conformist.(
     make
-      Field.
-        [ custom
-            occupation_decoder
-            occupation_encoder
-            "occupation"
-            ~meta:()
-        ; string "email"
-        ; date "birthday"
-        ; int ~default:0 "nr_of_siblings"
-        ; optional (string "comment")
-        ; bool "wants_premium"
-        ]
+      [ custom occupation_decoder occupation_encoder "occupation" ~meta:()
+      ; string "email"
+      ; datetime "birthday"
+      ; int ~default:0 "nr_of_siblings"
+      ; optional (string "comment")
+      ; bool "wants_premium"
+      ]
       user)
 ;;
 
-  let input =
-    [ "occupation", [ "engineer" ]
-    ; "email", [ "test@example.com" ]
-    ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
-    ; "nr_of_siblings", [ "3" ]
-    ; "comment", [ "hello" ]
-    ; "wants_premium", [ "true" ]
-    ]
+let input =
+  [ "occupation", [ "engineer" ]
+  ; "email", [ "test@example.com" ]
+  ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
+  ; "nr_of_siblings", [ "3" ]
+  ; "comment", [ "hello" ]
+  ; "wants_premium", [ "true" ]
+  ]
+;;
 
-let user =
-  Conformist.decode Schema.user_schema input
-
-let validation_errors =
-  Conformist.validate Schema.user_schema input
+let user = Conformist.decode Schema.user_schema input
+let validation_errors = Conformist.validate Schema.user_schema input
 ```
 
 Try to delete/swap some lines of the list of fields, to change the constructor or the user type. The compiler forces you to keep these three things in sync.

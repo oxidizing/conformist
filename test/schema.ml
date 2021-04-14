@@ -90,17 +90,16 @@ let gender_encoder = function
 ;;
 
 let user_schema =
-  let module C = Conformist in
-  Conformist.make
-    Conformist.Field.
-      [ C.custom gender_decoder gender_encoder ~default:Female "gender" ~meta:()
-      ; C.string "name"
-      ; C.string "email"
-      ; C.datetime "birthday"
-      ; C.string "country"
-      ; C.int ~default:0 "nr_of_siblings"
-      ; C.optional (C.string "comment")
-      ; C.bool ~default:false "wants_premium"
-      ]
+  Conformist.(
+    make
+      [ custom gender_decoder gender_encoder ~default:Female "gender" ~meta:()
+      ; string "name"
+      ; string "email"
+      ; datetime "birthday"
+      ; string "country"
+      ; int ~default:0 "nr_of_siblings"
+      ; optional (string "comment")
+      ; bool ~default:false "wants_premium"
+      ])
     user
 ;;

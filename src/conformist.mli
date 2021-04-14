@@ -147,10 +147,14 @@ module Field : sig
       fail, which results in an error string. *)
   val validate : 'a any_field -> string -> string option
 
-  (** [optional field] turns a [field] into an optional field. This means that
-      input that doesn't contain a value for the field will yield in a valid
-      field. *)
+  (** [optional field] returns [true] if the [field] is optional and [false]
+      otherwise. *)
   val optional : 'a any_field -> bool
+    [@@deprecated "Please use is_optional instead"]
+
+  (** [is_optional field] returns [true] if the [field] is optional and [false]
+      otherwise. *)
+  val is_optional : 'a any_field -> bool
 
   (** [type_ field] returns a string representation of the type of [field]. *)
   val type_ : 'a any_field -> string
