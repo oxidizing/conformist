@@ -142,10 +142,10 @@ module Field : sig
       the field within one schema. *)
   val name : 'a any_field -> string
 
-  (** [validate field string] decodes a [string] and runs the [field]'s
-      validation logic on the decoded value. Both decoding and validation might
-      fail, which results in an error string. *)
-  val validate : 'a any_field -> string -> string option
+  (** [validate field values] decodes [values] and runs the [field]'s validation
+      logic on the decoded values. Both decoding and validation might fail,
+      which results in an error string. *)
+  val validate : 'a any_field -> string List.t -> string option
 
   (** [optional field] returns [true] if the [field] is optional and [false]
       otherwise. *)
@@ -161,15 +161,15 @@ module Field : sig
 
   (** [encode_default field] tries to encode the default value if present and to
       return it as string. *)
-  val encode_default : 'a any_field -> string option
+  val encode_default : 'a any_field -> string List.t
 end
 
-(** A ['a decoder] tries to turn a string into a value of type ['a]. It returns
-    a descriptive errors message upon failure. *)
-type 'a decoder = string -> ('a, string) result
+(** A ['a decoder] tries to turn values into a value of type ['a]. It returns a
+    descriptive errors message upon failure. *)
+type 'a decoder = string list -> ('a, string) result
 
-(** A ['a encoder] encodes a value of type ['a] into a string. *)
-type 'a encoder = 'a -> string
+(** A ['a encoder] encodes a value of type ['a] into a list of strings. *)
+type 'a encoder = 'a -> string list
 
 (** A ['a validator] takes something of type ['a] and returns an error string if
     validation fails, [None] if everything is ok *)
@@ -220,6 +220,8 @@ val custom
       ()
     ]} *)
 val optional : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
+
+val list : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c list) Field.t
 
 (** [bool ?default ?meta ?msg field_name] returns a field with name [field_name]
     that decodes to a [bool].
@@ -356,11 +358,11 @@ val fold_left
     validation errors.
 
     [field] is the field name of the input that failed to decode or validate,
-    [value] is the input value (if one was provided) and [error_message] is the
-    decoding or validation error message.
+    [values] are the input values (if they were provided) and [error_message] is
+    the decoding or validation error message.
 
     An empty list of [error] means that the schema is valid. *)
-type error = string * string option * string
+type error = string * string list * string
 
 (** The [input] represents unsafe data that needs to be decoded and validated.
     This is typically some user input. *)

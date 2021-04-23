@@ -1,5 +1,5 @@
-type 'a decoder = string -> ('a, string) result
-type 'a encoder = 'a -> string
+type 'a decoder = string list -> ('a, string) result
+type 'a encoder = 'a -> string list
 type 'a validator = 'a -> string option
 
 let always_valid _ = None
@@ -36,7 +36,12 @@ module Field = struct
   let optional (AnyField field) = field.optional
   let is_optional (AnyField field) = field.optional
   let type_ (AnyField field) = field.type_
-  let encode_default (AnyField field) = Option.map field.encoder field.default
+
+  let encode_default (AnyField field) : string List.t =
+    match field.default with
+    | Some v -> field.encoder v
+    | None -> []
+  ;;
 
   let make name meta decoder encoder default type_ validator optional =
     { name; meta; default; decoder; encoder; type_; validator; optional }
@@ -69,7 +74,7 @@ module Field = struct
     let encoder a =
       match a with
       | Some a -> field.encoder a
-      | None -> "None"
+      | None -> [ "None" ]
     in
     make
       field.name
@@ -82,12 +87,52 @@ module Field = struct
       true
   ;;
 
+  let make_list ?meta:_ _ = failwith "todo"
+
+  (* let make_list ?meta field =
+   *   let decoder (l : string List.t) : ('a List.t, string) result =
+   *     List.fold_left
+   *       (fun res el ->
+   *         match res, field.decoder el with
+   *         | Ok result, Ok el -> Ok (List.cons el result)
+   *         | Ok _, Error msg -> Error msg
+   *         | Error msg, _ -> Error msg)
+   *       (Ok [])
+   *       l
+   *   in
+   *   let validator l =
+   *     List.fold_left
+   *       (fun res el ->
+   *         match res, field.validator el with
+   *         | None, None -> None
+   *         | None, Some msg -> Some msg
+   *         | Some msg, _ -> Some msg)
+   *       None
+   *       l
+   *   in
+   *   let encoder a =
+   *     match a with
+   *     | Some a -> field.encoder a
+   *     | None -> "None"
+   *   in
+   *   make
+   *     field.name
+   *     meta
+   *     decoder
+   *     encoder
+   *     (Some field.default)
+   *     field.type_
+   *     validator
+   *     true
+   * ;; *)
+
   let make_bool ?default ?meta ?(msg = "Invalid value provided") name =
-    let decoder string =
-      try Ok (bool_of_string string) with
+    let decoder input =
+      try Ok (bool_of_string (List.hd input)) with
       | _ -> Error msg
     in
-    make name meta decoder string_of_bool default "bool" always_valid false
+    let encoder input = List.[ string_of_bool input ] in
+    make name meta decoder encoder default "bool" always_valid false
   ;;
 
   let make_float
@@ -98,10 +143,11 @@ module Field = struct
       name
     =
     let decoder string =
-      try Ok (float_of_string string) with
+      try Ok (float_of_string (List.hd string)) with
       | _ -> Error msg
     in
-    make name meta decoder string_of_float default "float" validator false
+    let encoder input = List.[ string_of_float input ] in
+    make name meta decoder encoder default "float" validator false
   ;;
 
   let make_int
@@ -112,15 +158,20 @@ module Field = struct
       name
     =
     let decoder string =
-      try Ok (int_of_string string) with
+      try Ok (int_of_string (List.hd string)) with
       | _ -> Error msg
     in
-    make name meta decoder string_of_int default "int" validator false
+    let encoder input = List.[ string_of_int input ] in
+    make name meta decoder encoder default "int" validator false
   ;;
 
   let make_string ?default ?meta ?(validator = always_valid) name =
-    let decoder string = Ok string in
-    make name meta decoder (fun id -> id) default "string" validator false
+    let decoder input =
+      try Ok (List.hd input) with
+      | _ -> Error "Invalid input provided"
+    in
+    let encoder id = List.[ id ] in
+    make name meta decoder encoder default "string" validator false
   ;;
 
   let make_date
@@ -130,17 +181,20 @@ module Field = struct
       ?(validator = always_valid)
       name
     =
-    let decoder string =
-      match String.split_on_char '-' string with
-      | [ y; m; d ] ->
-        (match
-           int_of_string_opt y, int_of_string_opt m, int_of_string_opt d
-         with
-        | Some y, Some m, Some d -> Ok (y, m, d)
-        | _ -> Error msg)
+    let decoder input =
+      try
+        match String.split_on_char '-' (List.hd input) with
+        | [ y; m; d ] ->
+          (match
+             int_of_string_opt y, int_of_string_opt m, int_of_string_opt d
+           with
+          | Some y, Some m, Some d -> Ok (y, m, d)
+          | _ -> Error msg)
+        | _ -> Error msg
+      with
       | _ -> Error msg
     in
-    let encoder (y, m, d) = Format.sprintf "%d-%d-%d" y m d in
+    let encoder (y, m, d) = List.[ Format.sprintf "%d-%d-%d" y m d ] in
     make name meta decoder encoder default "date" validator false
   ;;
 
@@ -152,17 +206,21 @@ module Field = struct
       name
     =
     let decoder string =
-      match Ptime.of_rfc3339 string with
-      | Ok (timestamp, _, _) -> Ok timestamp
-      | Error (`RFC3339 (_, _)) -> Error msg
+      try
+        match Ptime.of_rfc3339 (List.hd string) with
+        | Ok (timestamp, _, _) -> Ok timestamp
+        | Error (`RFC3339 (_, _)) -> Error msg
+      with
+      | _ -> Error msg
     in
-    let encoder ptime = Ptime.to_rfc3339 ptime in
+    let encoder ptime = List.[ Ptime.to_rfc3339 ptime ] in
     make name meta decoder encoder default "time" validator false
   ;;
 end
 
 let custom = Field.make_custom
 let optional = Field.make_optional
+let list = Field.make_list
 let bool = Field.make_bool
 let float = Field.make_float
 let int = Field.make_int
@@ -193,37 +251,36 @@ let rec fold_left'
 
 let fold_left ~f ~init schema = fold_left' ~f ~init schema.fields
 
-type error = string * string option * string
+type error = string * string list * string
 type input = (string * string list) list
 
-let validate schema input =
+let validate
+    (schema : ('meta, 'ctor, 'ty) t)
+    (input : (string * string list) list)
+    : error list
+  =
   let f errors field =
     let name = Field.name field in
     match List.assoc name input with
-    | [ value_string ] ->
-      (match Field.validate field value_string with
-      | Some msg -> List.cons (name, Some value_string, msg) errors
-      | None -> errors)
     | values ->
-      let value = Format.sprintf "[%s]" (String.concat ", " values) in
-      List.cons (name, Some value, "Multiple values provided") errors
+      (match Field.validate field values with
+      | Some msg -> List.cons (name, values, msg) errors
+      | None -> errors)
     | exception Not_found ->
       (match Field.is_optional field, Field.encode_default field with
-      | _, Some default ->
+      | true, List.[] -> errors
+      | false, List.[] -> List.cons (name, [], "No value provided") errors
+      | _, default ->
         (match Field.validate field default with
-        | Some msg -> List.cons (name, None, msg) errors
-        | None -> errors)
-      | true, None -> errors
-      | false, None -> List.cons (name, None, "No value provided") errors)
+        | Some msg -> List.cons (name, [], msg) errors
+        | None -> errors))
   in
   fold_left ~f ~init:[] schema |> List.rev
 ;;
 
 let rec decode
     : type meta ctor ty.
-      (meta, ctor, ty) t
-      -> (string * string list) list
-      -> (ty, string * string option * string) Result.t
+      (meta, ctor, ty) t -> (string * string list) list -> (ty, error) Result.t
   =
  fun { fields; ctor } fields_assoc ->
   let open! Field in
@@ -231,15 +288,6 @@ let rec decode
   | [] -> Ok ctor
   | field :: fields ->
     (match List.assoc field.name fields_assoc with
-    | [ value_string ] ->
-      (match field.decoder value_string with
-      | Ok value ->
-        (match ctor value with
-        | ctor -> decode { fields; ctor } fields_assoc
-        | exception exn ->
-          let msg = Printexc.to_string exn in
-          Error (field.name, Some value_string, msg))
-      | Error msg -> Error (field.name, Some value_string, msg))
     | [] ->
       (match field.default with
       | Some value ->
@@ -247,19 +295,25 @@ let rec decode
         | ctor -> decode { fields; ctor } fields_assoc
         | exception exn ->
           let msg = Printexc.to_string exn in
-          Error (field.name, None, msg))
+          Error (field.name, [], msg))
       | None ->
-        (match field.decoder "" with
+        (match field.decoder [] with
         | Ok value ->
           (match ctor value with
           | ctor -> decode { fields; ctor } fields_assoc
           | exception exn ->
             let msg = Printexc.to_string exn in
-            Error (field.name, None, msg))
-        | Error msg -> Error (field.name, Some "", msg)))
+            Error (field.name, [], msg))
+        | Error msg -> Error (field.name, [], msg)))
     | values ->
-      let value = Format.sprintf "[%s]" (String.concat ", " values) in
-      Error (field.name, Some value, "Multiple values provided")
+      (match field.decoder values with
+      | Ok value ->
+        (match ctor value with
+        | ctor -> decode { fields; ctor } fields_assoc
+        | exception exn ->
+          let msg = Printexc.to_string exn in
+          Error (field.name, values, msg))
+      | Error msg -> Error (field.name, values, msg))
     | exception Not_found ->
       (match field.default with
       | Some value ->
@@ -267,9 +321,13 @@ let rec decode
         | ctor -> decode { fields; ctor } fields_assoc
         | exception exn ->
           let msg = Printexc.to_string exn in
-          let value_string = Option.map field.encoder field.default in
-          Error (field.name, value_string, msg))
-      | None -> Error (field.name, None, "No value provided")))
+          let values =
+            match field.default with
+            | Some default -> field.encoder default
+            | None -> []
+          in
+          Error (field.name, values, msg))
+      | None -> Error (field.name, [], "No value provided")))
 ;;
 
 let decode_and_validate schema input =

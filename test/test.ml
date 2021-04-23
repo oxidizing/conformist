@@ -1,4 +1,4 @@
-let testable_error = Alcotest.(triple string (option string) string)
+let testable_error = Alcotest.(triple string (list string) string)
 let testable_errors = Alcotest.(list testable_error)
 
 let testable_decode_result testable' =
@@ -46,7 +46,7 @@ let decode_optional () =
     check
       (testable_decode_result testable_schema_optional)
       "has no name"
-      (Error ("name", None, "No value provided"))
+      (Error ("name", [], "No value provided"))
       (C.decode schema []));
   Alcotest.(
     check
@@ -157,7 +157,7 @@ let testable_schema_multi = Alcotest.testable pp_schema_multi equal_schema_multi
 let decode_multi () =
   let make name age = { name; age } in
   let schema = C.make [ C.string "name"; C.int "age" ] make in
-  let expected = Error ("name", None, "No value provided") in
+  let expected = Error ("name", [], "No value provided") in
   let actual = C.decode schema [] in
   Alcotest.(
     check
@@ -165,7 +165,7 @@ let decode_multi () =
       "has no values"
       expected
       actual);
-  let expected = Error ("name", None, "No value provided") in
+  let expected = Error ("name", [], "No value provided") in
   let actual = C.decode schema [ "age", [ "foo" ] ] in
   Alcotest.(
     check
@@ -203,7 +203,7 @@ let decode_complete_and_invalid_input () =
     check
       (testable_decode_result testable_user_form)
       "has one error"
-      (Error ("nr_of_siblings", Some "fail", "Invalid number provided"))
+      (Error ("nr_of_siblings", List.[ "fail" ], "Invalid number provided"))
       actual)
 ;;
 
@@ -253,7 +253,7 @@ let validate_default () =
     check
       testable_errors
       "no name"
-      [ "name", None, "No value provided" ]
+      [ "name", [], "No value provided" ]
       (C.validate schema []));
   Alcotest.(
     check
@@ -277,10 +277,10 @@ let validate_incomplete_input () =
     check
       testable_errors
       "has error"
-      [ "name", None, "No value provided"
-      ; "email", None, "No value provided"
-      ; "birthday", None, "No value provided"
-      ; "country", None, "No value provided"
+      [ "name", [], "No value provided"
+      ; "email", [], "No value provided"
+      ; "birthday", [], "No value provided"
+      ; "country", [], "No value provided"
       ])
     actual;
   let actual =
@@ -292,10 +292,10 @@ let validate_incomplete_input () =
     check
       testable_errors
       "has error"
-      [ "gender", Some "foo", "Unknown gender provided"
-      ; "name", None, "No value provided"
-      ; "email", None, "No value provided"
-      ; "country", None, "No value provided"
+      [ "gender", List.[ "foo" ], "Unknown gender provided"
+      ; "name", [], "No value provided"
+      ; "email", [], "No value provided"
+      ; "country", [], "No value provided"
       ]
       actual)
 ;;
@@ -323,10 +323,10 @@ let decode_and_validate_incomplete_input () =
       (result testable_user_form testable_errors)
       "has error"
       (Error
-         [ "name", None, "No value provided"
-         ; "email", None, "No value provided"
-         ; "birthday", None, "No value provided"
-         ; "country", None, "No value provided"
+         [ "name", [], "No value provided"
+         ; "email", [], "No value provided"
+         ; "birthday", [], "No value provided"
+         ; "country", [], "No value provided"
          ]))
     actual;
   let actual =
@@ -339,10 +339,10 @@ let decode_and_validate_incomplete_input () =
       (result testable_user_form testable_errors)
       "has error"
       (Error
-         [ "gender", Some "foo", "Unknown gender provided"
-         ; "name", None, "No value provided"
-         ; "email", None, "No value provided"
-         ; "country", None, "No value provided"
+         [ "gender", List.[ "foo" ], "Unknown gender provided"
+         ; "name", [], "No value provided"
+         ; "email", [], "No value provided"
+         ; "country", [], "No value provided"
          ])
       actual)
 ;;
@@ -391,12 +391,12 @@ let datetime = C.make [ C.datetime ~meta:() "datetime" ] create_datetime
 let decode_and_validate_datetime () =
   let input = [ "datetime", [ "invalid datetime" ] ] in
   let expected =
-    "datetime", Some "invalid datetime", "Invalid datetime provided"
+    "datetime", [ "invalid datetime" ], "Invalid datetime provided"
   in
   let actual = C.decode datetime input |> Result.get_error in
   Alcotest.(check testable_error "invalid date" expected actual);
   let input = [ "datetime", [ "2020-12-01" ] ] in
-  let expected = "datetime", Some "2020-12-01", "Invalid datetime provided" in
+  let expected = "datetime", [ "2020-12-01" ], "Invalid datetime provided" in
   let actual = C.decode datetime input |> Result.get_error in
   Alcotest.(check testable_error "invalid date" expected actual);
   let input = [ "datetime", [ "2020-12-01T00:00:00.00Z" ] ] in
