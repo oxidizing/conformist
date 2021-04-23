@@ -221,6 +221,7 @@ let decode_complete_and_valid_input () =
     ; "country", [ "Switzerland" ]
     ; "nr_of_siblings", [ "3" ]
     ; "comment", [ "hello" ]
+    ; "favorite_shows", [ "breaking bad"; "better call saul" ]
     ; "wants_premium", [ "true" ]
     ]
   in
@@ -234,6 +235,7 @@ let decode_complete_and_valid_input () =
       "Switzerland"
       3
       (Some "hello")
+      [ "breaking bad"; "better call saul" ]
       true
   in
   Alcotest.(
@@ -356,6 +358,7 @@ let decode_and_validate_complete_and_valid_input () =
     ; "country", [ "Switzerland" ]
     ; "nr_of_siblings", [ "3" ]
     ; "comment", [ "hello" ]
+    ; "favorite_shows", [ "breaking bad"; "better call saul" ]
     ; "wants_premium", [ "true" ]
     ]
   in
@@ -378,6 +381,7 @@ let decode_and_validate_complete_and_valid_input () =
            ; country = "Switzerland"
            ; nr_of_siblings = 3
            ; comment = Some "hello"
+           ; favorite_shows = [ "breaking bad"; "better call saul" ]
            ; wants_premium = true
            })
       actual)

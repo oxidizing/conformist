@@ -60,22 +60,38 @@ type user =
   ; birthday : Ptime.t
   ; nr_of_siblings : int
   ; comment : string option
+  ; favorite_shows : string list
   ; wants_premium : bool
   }
 
-let user occupation email birthday nr_of_siblings comment wants_premium =
-  { occupation; email; birthday; nr_of_siblings; comment; wants_premium }
+let user
+    occupation
+    email
+    birthday
+    nr_of_siblings
+    comment
+    favorite_shows
+    wants_premium
+  =
+  { occupation
+  ; email
+  ; birthday
+  ; nr_of_siblings
+  ; comment
+  ; favorite_shows
+  ; wants_premium
+  }
 ;;
 
 let occupation_decoder = function
-  | "mathematician" -> Ok Mathematician
-  | "engineer" -> Ok Engineer
+  | [ "mathematician" ] -> Ok Mathematician
+  | [ "engineer" ] -> Ok Engineer
   | _ -> Error "Unknown occupation provided"
 ;;
 
 let occupation_encoder = function
-  | Mathematician -> "mathematician"
-  | Engineer -> "engineer"
+  | Mathematician -> [ "mathematician" ]
+  | Engineer -> [ "engineer" ]
 ;;
 
 let user_schema =
@@ -86,6 +102,7 @@ let user_schema =
       ; datetime "birthday"
       ; int ~default:0 "nr_of_siblings"
       ; optional (string "comment")
+      ; list (string "favorite_shows")
       ; bool "wants_premium"
       ]
       user)
