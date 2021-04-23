@@ -27,6 +27,7 @@ type user =
   ; country : string
   ; nr_of_siblings : int
   ; comment : string option
+  ; favorite_shows : string list
   ; wants_premium : bool
   }
 
@@ -38,6 +39,7 @@ let user_to_sexp
     ; country
     ; nr_of_siblings
     ; comment
+    ; favorite_shows
     ; wants_premium
     }
   =
@@ -51,6 +53,7 @@ let user_to_sexp
     ; List [ Atom "country"; sexp_of_string country ]
     ; List [ Atom "nr_of_siblings"; sexp_of_int nr_of_siblings ]
     ; List [ Atom "comment"; sexp_of_option sexp_of_string comment ]
+    ; List [ Atom "favorite_shows"; sexp_of_list sexp_of_string favorite_shows ]
     ; List [ Atom "wants_premium"; sexp_of_bool wants_premium ]
     ]
 ;;
@@ -63,7 +66,16 @@ let equal_user u1 u2 =
     (Format.asprintf "%a" pp_user u2)
 ;;
 
-let user gender name email birthday country nr_of_siblings comment wants_premium
+let user
+    gender
+    name
+    email
+    birthday
+    country
+    nr_of_siblings
+    comment
+    favorite_shows
+    wants_premium
   =
   { gender
   ; name
@@ -72,6 +84,7 @@ let user gender name email birthday country nr_of_siblings comment wants_premium
   ; country
   ; nr_of_siblings
   ; comment
+  ; favorite_shows
   ; wants_premium
   }
 ;;
@@ -99,6 +112,7 @@ let user_schema =
       ; string "country"
       ; int ~default:0 "nr_of_siblings"
       ; optional (string "comment")
+      ; list (string "favorite_shows")
       ; bool ~default:false "wants_premium"
       ])
     user

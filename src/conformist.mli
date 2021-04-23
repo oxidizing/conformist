@@ -221,7 +221,18 @@ val custom
     ]} *)
 val optional : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c option) Field.t
 
-val list : ?meta:'a -> ('b, 'c) Field.t -> ('a, 'c list) Field.t
+(** [list ?default ?meta field] returns a field that decodes to a list of
+    [field].
+
+    [default] is an optional default value for the field.
+
+    [meta] is optional meta data that is attached to the field. This is useful
+    when implementing features on top of conformist. *)
+val list
+  :  ?default:'c list
+  -> ?meta:'a
+  -> ('b, 'c) Field.t
+  -> ('a, 'c list) Field.t
 
 (** [bool ?default ?meta ?msg field_name] returns a field with name [field_name]
     that decodes to a [bool].

@@ -87,44 +87,31 @@ module Field = struct
       true
   ;;
 
-  let make_list ?meta:_ _ = failwith "todo"
-
-  (* let make_list ?meta field =
-   *   let decoder (l : string List.t) : ('a List.t, string) result =
-   *     List.fold_left
-   *       (fun res el ->
-   *         match res, field.decoder el with
-   *         | Ok result, Ok el -> Ok (List.cons el result)
-   *         | Ok _, Error msg -> Error msg
-   *         | Error msg, _ -> Error msg)
-   *       (Ok [])
-   *       l
-   *   in
-   *   let validator l =
-   *     List.fold_left
-   *       (fun res el ->
-   *         match res, field.validator el with
-   *         | None, None -> None
-   *         | None, Some msg -> Some msg
-   *         | Some msg, _ -> Some msg)
-   *       None
-   *       l
-   *   in
-   *   let encoder a =
-   *     match a with
-   *     | Some a -> field.encoder a
-   *     | None -> "None"
-   *   in
-   *   make
-   *     field.name
-   *     meta
-   *     decoder
-   *     encoder
-   *     (Some field.default)
-   *     field.type_
-   *     validator
-   *     true
-   * ;; *)
+  let make_list ?default ?meta field =
+    let decoder (l : string List.t) : ('a List.t, string) result =
+      List.fold_left
+        (fun res (el : string) ->
+          match res, field.decoder [ el ] with
+          | Ok result, Ok el -> Ok (List.cons el result)
+          | Ok _, Error msg -> Error msg
+          | Error msg, _ -> Error msg)
+        (Ok [])
+        l
+      |> Result.map List.rev
+    in
+    let validator l =
+      List.fold_left
+        (fun res el ->
+          match res, field.validator el with
+          | None, None -> None
+          | None, Some msg -> Some msg
+          | Some msg, _ -> Some msg)
+        None
+        l
+    in
+    let encoder (a : 'a List.t) = List.map field.encoder a |> List.concat in
+    make field.name meta decoder encoder default field.type_ validator true
+  ;;
 
   let make_bool ?default ?meta ?(msg = "Invalid value provided") name =
     let decoder input =
