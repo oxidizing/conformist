@@ -77,16 +77,16 @@ let user gender name email birthday country nr_of_siblings comment wants_premium
 ;;
 
 let gender_decoder = function
-  | "male" -> Ok Male
-  | "female" -> Ok Female
-  | "other" -> Ok Other
+  | [ "male" ] -> Ok Male
+  | [ "female" ] -> Ok Female
+  | [ "other" ] -> Ok Other
   | _ -> Error "Unknown gender provided"
 ;;
 
 let gender_encoder = function
-  | Male -> "male"
-  | Female -> "female"
-  | Other -> "other"
+  | Male -> [ "male" ]
+  | Female -> [ "female" ]
+  | Other -> [ "other" ]
 ;;
 
 let user_schema =

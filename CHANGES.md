@@ -1,6 +1,7 @@
 ## ?
 ### Changed
 - `Conformist.Field.optional` is now `Conformist.Field.is_optional` to avoid confusion with `Conformist.optional`
+- The encoded value is assumed to be `string list` instead of `string`. This is preparation to support decoding of a list of strings.
 
 ## 0.5.0 - 2021-04-12
 ### Added

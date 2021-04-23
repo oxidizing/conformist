@@ -7,6 +7,9 @@ deps: ## Install development dependencies
 create_switch:
 	opam switch create . --no-install
 
+.PHONY: switch
+switch: create_switch deps ## Create an opam switch and install development dependencies
+
 .PHONY: format
 format: ## Format the codebase with ocamlformat
 	opam exec -- dune build --root . --auto-promote @fmt
