@@ -1,4 +1,4 @@
-## ?
+## 0.6.0 - 2021-05-30
 ### Added
 - Add `Conformist.list` to support decoding list of `'a`
 
