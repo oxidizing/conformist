@@ -30,7 +30,7 @@ depends: [
   "topkg" {= "1.0.3"}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"
