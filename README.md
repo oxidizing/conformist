@@ -128,6 +128,8 @@ Decoding doesn't validate the data, it just makes sure that the types are correc
 
 Note that if decoding of a field fails, validation fails as well. Before a field is validated, it gets decoded.
 
+Since we are shadowing the list `[]`, dune warnings might fail compilation depending on the configuration. Suppress warning `-40` can help.
+
 ## Documentation
 
 The documentation for the latest released version can be found [here](https://oxidizing.github.io/conformist/conformist/Conformist/index.html).
