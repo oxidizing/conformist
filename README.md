@@ -94,11 +94,17 @@ let occupation_encoder = function
   | Engineer -> [ "engineer" ]
 ;;
 
+(* This is for example purpose only. 
+   Please use emile (https://github.com/dinosaure/emile) instead *)
+let validate_email value =
+  if String.index value '@' > 0 then None
+  else Some "This doesn't look like an email"
+  
 let user_schema =
   Conformist.(
     make
       [ custom occupation_decoder occupation_encoder "occupation" ~meta:()
-      ; string "email"
+      ; string "email" ~validator: validate_email
       ; datetime "birthday"
       ; int ~default:0 "nr_of_siblings"
       ; optional (string "comment")
@@ -114,12 +120,13 @@ let input =
   ; "birthday", [ "2020-12-01T00:00:00.00Z" ]
   ; "nr_of_siblings", [ "3" ]
   ; "comment", [ "hello" ]
+  ; "favorite_shows", [ "Iron Man"; "Avengers" ]
   ; "wants_premium", [ "true" ]
   ]
 ;;
 
-let user = Conformist.decode Schema.user_schema input
-let validation_errors = Conformist.validate Schema.user_schema input
+let user = Conformist.decode user_schema input
+let validation_errors = Conformist.validate user_schema input
 ```
 
 Try to delete/swap some lines of the list of fields, to change the constructor or the user type. The compiler forces you to keep these three things in sync.
