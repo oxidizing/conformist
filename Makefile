@@ -2,10 +2,12 @@
 deps: ## Install development dependencies
 	opam install -y dune-release merlin ocamlformat utop
 	OPAMSOLVERTIMEOUT=240 opam install --deps-only --with-test --with-doc -y .
+	eval $(opam env)
 
 .PHONY: create_switch
 create_switch:
-	opam switch create . --no-install
+	opam switch create . --no-install --locked
+	eval $(opam env)
 
 .PHONY: switch
 switch: create_switch deps ## Create an opam switch and install development dependencies
@@ -25,7 +27,3 @@ clean: ## Clean build artifacts and other generated files
 .PHONY: test
 test:
 	opam exec -- dune test
-
-.PHONY: doc
-doc: ## Generate odoc documentation
-	opam exec -- dune build --root . @doc

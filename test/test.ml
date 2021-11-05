@@ -408,6 +408,43 @@ let decode_and_validate_datetime () =
   Alcotest.(check bool "valid date" true actual)
 ;;
 
+module Custom_error = struct
+  type error = bool
+
+  let invalid_bool = false
+  let invalid_float = false
+  let invalid_int = false
+  let invalid_string = false
+  let invalid_date = false
+  let invalid_datetime = false
+  let no_value = false
+  let of_string _ = false
+end
+
+module C_custom = Conformist.Make (Custom_error)
+
+type some_type = { field : bool }
+
+let create_some_type field = { field }
+
+let some_type =
+  C_custom.make [ C_custom.bool ~meta:() "field" ] create_some_type
+;;
+
+let fail_with_custom_error () =
+  let actual =
+    C_custom.decode_and_validate some_type [ "field", [ "true" ] ]
+    |> Result.get_ok
+  in
+  Alcotest.(check bool "decoded type" true actual.field);
+  let _, _, actual =
+    C_custom.decode_and_validate some_type [ "field", [ "invalid" ] ]
+    |> Result.get_error
+    |> List.hd
+  in
+  Alcotest.(check bool "custom error type" false actual)
+;;
+
 let () =
   let open Alcotest in
   run
@@ -435,5 +472,7 @@ let () =
             decode_and_validate_complete_and_valid_input
         ; test_case "datetime" `Quick decode_and_validate_datetime
         ] )
+    ; ( "decode and validate with custom error type"
+      , [ test_case "custom error type" `Quick fail_with_custom_error ] )
     ]
 ;;
