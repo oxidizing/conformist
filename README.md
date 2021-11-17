@@ -139,7 +139,7 @@ Since we are shadowing the list `[]`, dune warnings might fail compilation depen
 
 ## Documentation
 
-The documentation for the latest released version can be found [here](https://oxidizing.github.io/conformist/conformist/Conformist/index.html).
+The documentation for the latest released version can be found [here](https://v3.ocaml.org/p/conformist/0.6.0).
 
 ## License
 
