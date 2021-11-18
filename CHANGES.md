@@ -1,3 +1,7 @@
+## 0.7.0 - 2021-11-18
+### Added
+- `Make` functor to customize the error type and the error messages, which be default English `string`s
+
 ## 0.6.0 - 2021-05-30
 ### Added
 - Add `Conformist.list` to support decoding list of `'a`
