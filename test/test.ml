@@ -9,9 +9,25 @@ module C = Conformist
 
 (* Testing optional fields *)
 
+type occupation =
+  | Mathematician
+  | Engineer
+
+let decoder = function
+  | [ "mathematician" ] -> Ok Mathematician
+  | [ "engineer" ] -> Ok Engineer
+  | _ -> Error "Unknown occupation provided"
+;;
+
+let encoder = function
+  | Mathematician -> [ "mathematician" ]
+  | Engineer -> [ "engineer" ]
+;;
+
 type schema_optional =
   { name : string
   ; address : string option
+  ; occupation : occupation option
   }
 
 let schema_option_to_sexp s =
@@ -38,9 +54,12 @@ let testable_schema_optional =
 ;;
 
 let decode_optional () =
-  let make name address = { name; address } in
+  let make name address occupation = { name; address; occupation } in
+  let custom = C.custom decoder encoder "occupation" in
   let schema =
-    C.make [ C.string "name"; C.optional (C.string "address") ] make
+    C.make
+      [ C.string "name"; C.optional (C.string "address"); C.optional custom ]
+      make
   in
   Alcotest.(
     check
@@ -51,60 +70,56 @@ let decode_optional () =
   Alcotest.(
     check
       (testable_decode_result testable_schema_optional)
+      "has unknown occupation"
+      (Error ("occupation", [ "programmer" ], "Unknown occupation provided"))
+      (C.decode schema [ "name", [ "Walter" ]; "occupation", [ "programmer" ] ]));
+  Alcotest.(
+    check
+      (testable_decode_result testable_schema_optional)
       "decodes"
-      (Ok (make "Walter" None))
+      (Ok (make "Walter" None None))
       (C.decode schema [ "name", [ "Walter" ] ]));
   Alcotest.(
     check
       (testable_decode_result testable_schema_optional)
       "decodes"
-      (Ok (make "Walter" (Some "")))
+      (Ok (make "Walter" (Some "") None))
       (C.decode schema [ "name", [ "Walter" ]; "address", [ "" ] ]));
   Alcotest.(
     check
       (testable_decode_result testable_schema_optional)
       "decodes"
-      (Ok (make "Walter" None))
-      (C.decode schema [ "name", [ "Walter" ]; "address", [] ]));
-  let expected = Ok (make "Walter" (Some "Pineapple Street 3")) in
+      (Ok (make "Walter" None None))
+      (C.decode
+         schema
+         [ "name", [ "Walter" ]; "address", []; "occupation", [] ]));
+  let expected =
+    Ok (make "Walter" (Some "Pineapple Street 3") (Some Mathematician))
+  in
   let actual =
     C.decode
       schema
-      [ "name", [ "Walter" ]; "address", [ "Pineapple Street 3" ] ]
+      [ "name", [ "Walter" ]
+      ; "address", [ "Pineapple Street 3" ]
+      ; "occupation", [ "mathematician" ]
+      ]
   in
   Alcotest.(
     check
       (testable_decode_result testable_schema_optional)
       "decodes"
       expected
-      actual);
-  let schema =
-    C.make
-      [ C.string "name"; C.optional (C.string ~default:"Default" "address") ]
-      make
-  in
-  Alcotest.(
-    check
-      (testable_decode_result testable_schema_optional)
-      "decodes"
-      (Ok (make "Walter" (Some "Default")))
-      (C.decode schema [ "name", [ "Walter" ] ]));
-  Alcotest.(
-    check
-      (testable_decode_result testable_schema_optional)
-      "decodes"
-      (Ok (make "Walter" (Some "Pineapple Street")))
-      (C.decode
-         schema
-         [ "name", [ "Walter" ]; "address", [ "Pineapple Street" ] ]))
+      actual)
 ;;
 
 let decode_default () =
-  let make name address = { name; address } in
+  let make name address occupation = { name; address; occupation } in
+  let custom = C.custom decoder encoder ~default:Engineer "occupation" in
   let schema =
     C.make
       [ C.string ~default:"Walter" "name"
       ; C.optional (C.string ~default:"Default address" "address")
+      ; C.optional custom
       ]
       make
   in
@@ -112,20 +127,43 @@ let decode_default () =
     check
       (testable_decode_result testable_schema_optional)
       "decodes"
-      (Ok (make "Walter" (Some "Default address")))
+      (Ok (make "Walter" (Some "Default address") (Some Engineer)))
       (C.decode schema []));
   Alcotest.(
     check
       (testable_decode_result testable_schema_optional)
+      "has unknown occupation"
+      (Error ("occupation", [ "programmer" ], "Unknown occupation provided"))
+      (C.decode schema [ "name", [ "Walter" ]; "occupation", [ "programmer" ] ]));
+  Alcotest.(
+    check
+      (testable_decode_result testable_schema_optional)
       "decodes"
-      (Ok (make "Walter" (Some "")))
+      (Ok (make "Walter" (Some "") None))
       (C.decode schema [ "address", [ "" ] ]));
   Alcotest.(
     check
       (testable_decode_result testable_schema_optional)
       "decodes"
-      (Ok (make "Jesse" (Some "Default address")))
-      (C.decode schema [ "name", [ "Jesse" ] ]))
+      (Ok (make "Walter" (Some "Default address") (Some Engineer)))
+      (C.decode schema [ "address", []; "occupation", [] ]));
+  Alcotest.(
+    check
+      (testable_decode_result testable_schema_optional)
+      "decodes"
+      (Ok (make "Jesse" (Some "Default address") (Some Engineer)))
+      (C.decode schema [ "name", [ "Jesse" ] ]));
+  Alcotest.(
+    check
+      (testable_decode_result testable_schema_optional)
+      "decodes"
+      (Ok (make "Jesse" (Some "Pineapple Street") (Some Mathematician)))
+      (C.decode
+         schema
+         [ "name", [ "Jesse" ]
+         ; "address", [ "Pineapple Street" ]
+         ; "occupation", [ "mathematician" ]
+         ]))
 ;;
 
 (* Testing multiple fields *)
@@ -247,9 +285,12 @@ let decode_complete_and_valid_input () =
 ;;
 
 let validate_default () =
-  let make name address = { name; address } in
+  let make name address occupation = { name; address; occupation } in
+  let custom = C.custom decoder encoder "occupation" in
   let schema =
-    C.make [ C.string "name"; C.optional (C.string "address") ] make
+    C.make
+      [ C.string "name"; C.optional (C.string "address"); C.optional custom ]
+      make
   in
   Alcotest.(
     check
@@ -270,7 +311,10 @@ let validate_default () =
       []
       (C.validate
          schema
-         [ "name", [ "Walter" ]; "address", [ "Pineapple Street" ] ]))
+         [ "name", [ "Walter" ]
+         ; "address", [ "Pineapple Street" ]
+         ; "occupation", [ "mathematician" ]
+         ]))
 ;;
 
 let validate_incomplete_input () =
