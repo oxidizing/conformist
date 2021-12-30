@@ -377,10 +377,12 @@ module Make (Error : ERROR) = struct
     ;;
 
     let make_optional ?meta field =
-      let decoder string =
-        match field.decoder string with
-        | Ok result -> Ok (Some result)
-        | Error msg -> Error msg
+      let decoder strings =
+        match field.decoder strings, strings with
+        (* Decoding succeeds with nothing when no strings provided *)
+        | _, [] -> Ok None
+        | Ok result, _ -> Ok (Some result)
+        | Error msg, _ -> Error msg
       in
       let validator a =
         match a with
@@ -392,15 +394,12 @@ module Make (Error : ERROR) = struct
         | Some a -> field.encoder a
         | None -> [ "None" ]
       in
-      make
-        field.name
-        meta
-        decoder
-        encoder
-        (Some field.default)
-        field.type_
-        validator
-        true
+      let default =
+        match field.default with
+        | Some d -> Some (Some d)
+        | None -> None
+      in
+      make field.name meta decoder encoder default field.type_ validator true
     ;;
 
     let make_list ?default ?meta field =
@@ -598,6 +597,16 @@ module Make (Error : ERROR) = struct
     match fields with
     | [] -> Ok ctor
     | field :: fields ->
+      let handle_missing =
+        match field.decoder [] with
+        | Ok value ->
+          (match ctor value with
+          | ctor -> decode { fields; ctor } fields_assoc
+          | exception exn ->
+            let msg = Error.of_string (Printexc.to_string exn) in
+            Error (field.name, [], msg))
+        | Error msg -> Error (field.name, [], msg)
+      in
       (match List.assoc field.name fields_assoc with
       | [] ->
         (match field.default with
@@ -607,15 +616,7 @@ module Make (Error : ERROR) = struct
           | exception exn ->
             let msg = Error.of_string (Printexc.to_string exn) in
             Error (field.name, [], msg))
-        | None ->
-          (match field.decoder [] with
-          | Ok value ->
-            (match ctor value with
-            | ctor -> decode { fields; ctor } fields_assoc
-            | exception exn ->
-              let msg = Error.of_string (Printexc.to_string exn) in
-              Error (field.name, [], msg))
-          | Error msg -> Error (field.name, [], msg)))
+        | None -> handle_missing)
       | values ->
         (match field.decoder values with
         | Ok value ->
@@ -626,8 +627,8 @@ module Make (Error : ERROR) = struct
             Error (field.name, values, msg))
         | Error msg -> Error (field.name, values, msg))
       | exception Not_found ->
-        (match field.default with
-        | Some value ->
+        (match field.default, Field.is_optional @@ AnyField field with
+        | Some value, _ ->
           (match ctor value with
           | ctor -> decode { fields; ctor } fields_assoc
           | exception exn ->
@@ -638,7 +639,8 @@ module Make (Error : ERROR) = struct
               | None -> []
             in
             Error (field.name, values, msg))
-        | None -> Error (field.name, [], Error.no_value)))
+        | None, false -> Error (field.name, [], Error.no_value)
+        | None, true -> handle_missing))
  ;;
 
   let decode_and_validate schema input =
