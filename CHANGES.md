@@ -1,3 +1,7 @@
+## 0.8.0 - 2022-01-11
+### Fixed
+- Correctly handle optionals with no provided defaults
+
 ## 0.7.0 - 2021-11-18
 ### Added
 - `Make` functor to customize the error type and the error messages, which be default English `string`s
