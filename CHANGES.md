@@ -1,3 +1,7 @@
+## 0.8.1 - 2022-04-05
+### Fixed
+- Run decoder only once
+
 ## 0.8.0 - 2022-01-11
 ### Fixed
 - Correctly handle optionals with no provided defaults
