@@ -597,7 +597,7 @@ module Make (Error : ERROR) = struct
     match fields with
     | [] -> Ok ctor
     | field :: fields ->
-      let handle_missing =
+      let handle_missing () =
         match field.decoder [] with
         | Ok value ->
           (match ctor value with
@@ -616,7 +616,7 @@ module Make (Error : ERROR) = struct
           | exception exn ->
             let msg = Error.of_string (Printexc.to_string exn) in
             Error (field.name, [], msg))
-        | None -> handle_missing)
+        | None -> handle_missing ())
       | values ->
         (match field.decoder values with
         | Ok value ->
@@ -640,7 +640,7 @@ module Make (Error : ERROR) = struct
             in
             Error (field.name, values, msg))
         | None, false -> Error (field.name, [], Error.no_value)
-        | None, true -> handle_missing))
+        | None, true -> handle_missing ()))
  ;;
 
   let decode_and_validate schema input =
