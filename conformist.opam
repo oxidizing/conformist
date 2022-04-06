@@ -17,7 +17,7 @@ homepage: "https://github.com/oxidizing/conformist"
 doc: "https://oxidizing.github.io/conformist/"
 bug-reports: "https://github.com/oxidizing/conformist/issues"
 depends: [
-  "dune" {>= "2.7" & >= "2.4"}
+  "dune" {>= "2.7"}
   "ocaml" {>= "4.08.0"}
   "ptime" {>= "0.8.5"}
   "alcotest" {>= "1.2.3" & with-test}

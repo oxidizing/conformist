@@ -22,7 +22,6 @@ Re-use business rules in validators and run it on the client side with js_of_oca
 Arbitrary meta data can be stored in schemas which is useful to build functionality on top of conformist.
 ")
  (depends
-  (dune (>= 2.4))
   (ocaml (>= 4.08.0))
   (ptime (>= 0.8.5))
   (alcotest (and (>= 1.2.3) :with-test))
