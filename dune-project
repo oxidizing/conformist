@@ -26,4 +26,6 @@ Arbitrary meta data can be stored in schemas which is useful to build functional
   (ocaml (>= 4.08.0))
   (ptime (>= 0.8.5))
   (alcotest (and (>= 1.2.3) :with-test))
-  (sexplib (and (>= v0.13.0) :with-test))))
+  (sexplib (and (>= v0.13.0) :with-test)))
+ (conflicts
+  (result (< 1.5))))
